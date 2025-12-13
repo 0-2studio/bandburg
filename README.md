@@ -3,6 +3,8 @@ https://bandburg.0pen.top/
 
 基于 miband-web-install项目( https://github.com/0-2studio/miband-web-install ) 的黑白极简风格 Web 管理界面，用于连接和管理小米手环系列设备。
 
+本项目由 ASTROBOX 提供技术支持。
+
 **项目亮点**：
 - 🎨 **黑白极简设计**：高对比度、无装饰的现代扁平化界面
 - 📱 **响应式布局**：完美适配 PC 和移动设备，侧边栏智能收缩

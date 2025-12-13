@@ -1686,6 +1686,7 @@ function App() {
                   <p className="leading-relaxed">
                     BandBurg 是一个基于 WebAssembly (WASM) 的现代化 Web 界面，用于管理小米手环系列设备。
                     通过浏览器即可连接、配置和安装表盘/应用到您的手环设备，无需安装任何额外软件。
+                    本项目由 ASTROBOX 提供技术支持。
                   </p>
                 </div>
                 
