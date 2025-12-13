@@ -855,12 +855,12 @@ function App() {
           // 尝试从不同属性中提取数据
           const packageName = app.packageName || app.package_name || app.pkg || app.id || `app_${index}`
           const name = app.name || app.title || app.appName || app.label || `应用 ${packageName}`
-          const version = app.version || app.ver || app.versionName || app.version_name || '1.0.0'
+          //const version = app.version || app.ver || app.versionName || app.version_name || '1.0.0'
           
           return {
             packageName: String(packageName),
-            name,
-            version: String(version)
+            name
+            //version: String(version)
           }
         })
         
@@ -1542,7 +1542,7 @@ function App() {
                           <div className="flex-between">
                             <div>
                               <h4 className="font-bold">{app.name}</h4>
-                              <p className="text-sm text-gray-500">{app.packageName} (v{app.version})</p>
+                              <p className="text-sm text-gray-500">{app.packageName}</p>
                             </div>
                             <div className="flex space-x-2">
                               <button 

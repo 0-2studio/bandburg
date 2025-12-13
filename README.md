@@ -1,5 +1,4 @@
 # BandBurg - 小米手环现代化管理界面
-![icon](icon.png)
 基于 miband-web-install项目( https://github.com/0-2studio/miband-web-install ) 的黑白极简风格 Web 管理界面，用于连接和管理小米手环系列设备。
 
 **项目亮点**：
