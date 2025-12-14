@@ -63,6 +63,16 @@ interface Device {
   connected?: boolean
 }
 
+// 脚本程序类型定义
+interface ScriptProgram {
+  id: string
+  name: string
+  code: string
+  createdAt: number
+  updatedAt: number
+  description?: string
+}
+
 // 表盘类型定义
 interface Watchface {
   id: string
@@ -93,9 +103,19 @@ function App() {
   const [devicesCollapsed, setDevicesCollapsed] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const [activeNav, setActiveNav] = useState<'device' | 'about'>('device')
+  const [activeNav, setActiveNav] = useState<'device' | 'about' | 'script'>('device')
   const [activeTab, setActiveTab] = useState<'watchfaces' | 'apps' | 'install'>('watchfaces')
   const [logs, setLogs] = useState<string[]>(['欢迎使用 BandBurg - 小米手环管理工具'])
+  const [savedScripts, setSavedScripts] = useState<ScriptProgram[]>(() => {
+    // 从localStorage加载保存的脚本
+    try {
+      const saved = localStorage.getItem('bandburg_saved_scripts')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+  const [selectedScriptId, setSelectedScriptId] = useState<string>('')
   
   // 设备表单状态
   const [deviceForm, setDeviceForm] = useState<Omit<Device, 'id'>>({
@@ -1333,6 +1353,17 @@ function App() {
             >
               <span>关于</span>
             </div>
+            <div 
+              className={`nav-item ${activeNav === 'script' ? 'nav-item-selected' : 'nav-item-unselected'}`}
+              onClick={() => {
+                setActiveNav('script')
+                if (isMobile) {
+                  setSidebarOpen(false)
+                }
+              }}
+            >
+              <span>Script</span>
+            </div>
           </div>
         </div>
 
@@ -1674,7 +1705,7 @@ function App() {
               </div>
             </div>
           </div>
-        ) : (
+        ) : activeNav === 'about' ? (
           <div className="main-content">
             {/* 关于页面内容 */}
             <div className="border border-black p-8">
@@ -1763,6 +1794,1344 @@ function App() {
                   <p className="text-sm text-gray-500">
                     © 2025 0.2Studio
                   </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="main-content">
+            {/* Script页面 - JS代码编辑器和执行环境 */}
+            <div className="border border-black p-8">
+              <h2 className="text-3xl font-bold mb-6">Script 脚本执行环境</h2>
+              
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-xl font-bold mb-3">脚本编辑器</h3>
+                  
+                  {/* 程序管理工具栏 */}
+                  <div className="border border-black p-4 mb-4">
+                    <div className="flex flex-wrap items-center gap-3 mb-4">
+                      <div className="flex-1 min-w-[200px]">
+                        <div className="text-sm font-bold mb-1">程序管理</div>
+                        <div className="flex items-center gap-2">
+                          <select 
+                            className="flex-1 border border-black p-2 bg-white text-black"
+                            value={selectedScriptId}
+                            onChange={(e) => {
+                              const scriptId = e.target.value
+                              setSelectedScriptId(scriptId)
+                              if (scriptId) {
+                                const script = savedScripts.find(s => s.id === scriptId)
+                                if (script) {
+                                  const editor = document.getElementById('scriptEditor') as HTMLTextAreaElement
+                                  editor.value = script.code
+                                }
+                              } else {
+                                const editor = document.getElementById('scriptEditor') as HTMLTextAreaElement
+                                editor.value = ''
+                              }
+                            }}
+                          >
+                            <option value="">-- 选择程序 --</option>
+                            {savedScripts.map(script => (
+                              <option key={script.id} value={script.id}>
+                                {script.name} {script.description ? `(${script.description})` : ''}
+                              </option>
+                            ))}
+                          </select>
+                          
+                          <button 
+                            onClick={() => {
+                              const editor = document.getElementById('scriptEditor') as HTMLTextAreaElement
+                              const code = editor.value.trim()
+                              if (!code) {
+                                setLogs(prev => [...prev, '❌ 代码不能为空'])
+                                return
+                              }
+                              
+                              const name = prompt('请输入程序名称:', '未命名脚本')
+                              if (!name) return
+                              
+                              const description = prompt('请输入程序描述（可选）:', '')
+                              
+                              const newScript: ScriptProgram = {
+                                id: Date.now().toString(),
+                                name,
+                                code,
+                                description: description || undefined,
+                                createdAt: Date.now(),
+                                updatedAt: Date.now()
+                              }
+                              
+                              const updatedScripts = [...savedScripts, newScript]
+                              setSavedScripts(updatedScripts)
+                              setSelectedScriptId(newScript.id)
+                              
+                              // 保存到localStorage
+                              localStorage.setItem('bandburg_saved_scripts', JSON.stringify(updatedScripts))
+                              
+                              setLogs(prev => [...prev, `✅ 程序 "${name}" 已保存`])
+                            }}
+                            className="border border-black bg-white text-black px-3 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                          >
+                            保存
+                          </button>
+                          
+                          <button 
+                            onClick={() => {
+                              if (!selectedScriptId) {
+                                setLogs(prev => [...prev, '❌ 请先选择要删除的程序'])
+                                return
+                              }
+                              
+                              if (confirm('确定要删除此程序吗？')) {
+                                const updatedScripts = savedScripts.filter(s => s.id !== selectedScriptId)
+                                setSavedScripts(updatedScripts)
+                                setSelectedScriptId('')
+                                
+                                // 保存到localStorage
+                                localStorage.setItem('bandburg_saved_scripts', JSON.stringify(updatedScripts))
+                                
+                                const editor = document.getElementById('scriptEditor') as HTMLTextAreaElement
+                                editor.value = ''
+                                
+                                setLogs(prev => [...prev, '✅ 程序已删除'])
+                              }
+                            }}
+                            className="border border-black bg-white text-black px-3 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                            disabled={!selectedScriptId}
+                          >
+                            删除
+                          </button>
+                          
+                          <button 
+                            onClick={() => {
+                              // 创建隐藏的文件输入
+                              const input = document.createElement('input')
+                              input.type = 'file'
+                              input.accept = '.js,.txt'
+                              input.style.display = 'none'
+                              
+                              input.onchange = (e) => {
+                                const file = (e.target as HTMLInputElement).files?.[0]
+                                if (!file) return
+                                
+                                const reader = new FileReader()
+                                reader.onload = (event) => {
+                                  const code = event.target?.result as string
+                                  const editor = document.getElementById('scriptEditor') as HTMLTextAreaElement
+                                  editor.value = code
+                                  
+                                  setLogs(prev => [...prev, `✅ 已导入文件: ${file.name}`])
+                                }
+                                reader.readAsText(file)
+                              }
+                              
+                              document.body.appendChild(input)
+                              input.click()
+                              document.body.removeChild(input)
+                            }}
+                            className="border border-black bg-white text-black px-3 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                          >
+                            导入文件
+                          </button>
+                          
+                          <button 
+                            onClick={() => {
+                              const editor = document.getElementById('scriptEditor') as HTMLTextAreaElement
+                              editor.value = ''
+                              setSelectedScriptId('')
+                            }}
+                            className="border border-black bg-white text-black px-3 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                          >
+                            新建
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="border border-black p-4 mb-4">
+                    <div className="flex-between mb-4">
+                      <div>
+                        <h4 className="font-bold">JavaScript 代码</h4>
+                        <p className="text-sm text-gray-500">支持使用 WASM 接口与设备交互</p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button 
+                          onClick={() => {
+                            // 执行脚本
+                            try {
+                              const script = document.getElementById('scriptEditor') as HTMLTextAreaElement
+                              const code = script.value
+                              
+                              // 创建安全的执行环境
+                              const sandbox = {
+                                // 暴露的 WASM 接口
+                                wasm: {
+                                  // 设备连接相关
+                                  miwear_connect: async (name: string, addr: string, authkey: string, sar_version: number, connect_type: string) => {
+                                    if (!window.wasmClient?.wasmModule?.miwear_connect) {
+                                      throw new Error('WASM模块未初始化或miwear_connect函数不可用')
+                                    }
+                                    return await window.wasmClient.wasmModule.miwear_connect(name, addr, authkey, sar_version, connect_type)
+                                  },
+                                  miwear_disconnect: async (addr: string) => {
+                                    if (!window.wasmClient?.wasmModule?.miwear_disconnect) {
+                                      throw new Error('WASM模块未初始化或miwear_disconnect函数不可用')
+                                    }
+                                    return await window.wasmClient.wasmModule.miwear_disconnect(addr)
+                                  },
+                                  miwear_get_connected_devices: async () => {
+                                    if (!window.wasmClient?.wasmModule?.miwear_get_connected_devices) {
+                                      throw new Error('WASM模块未初始化或miwear_get_connected_devices函数不可用')
+                                    }
+                                    return await window.wasmClient.wasmModule.miwear_get_connected_devices()
+                                  },
+                                  miwear_get_data: async (addr: string, data_type: string) => {
+                                    if (!window.wasmClient?.wasmModule?.miwear_get_data) {
+                                      throw new Error('WASM模块未初始化或miwear_get_data函数不可用')
+                                    }
+                                    return await window.wasmClient.wasmModule.miwear_get_data(addr, data_type)
+                                  },
+                                  
+                                  // 第三方应用相关
+                                  thirdpartyapp_get_list: async (addr: string) => {
+                                    if (!window.wasmClient?.wasmModule?.thirdpartyapp_get_list) {
+                                      throw new Error('WASM模块未初始化或thirdpartyapp_get_list函数不可用')
+                                    }
+                                    return await window.wasmClient.wasmModule.thirdpartyapp_get_list(addr)
+                                  },
+                                  thirdpartyapp_launch: async (addr: string, package_name: string, page: string) => {
+                                    if (!window.wasmClient?.wasmModule?.thirdpartyapp_launch) {
+                                      throw new Error('WASM模块未初始化或thirdpartyapp_launch函数不可用')
+                                    }
+                                    return await window.wasmClient.wasmModule.thirdpartyapp_launch(addr, package_name, page)
+                                  },
+                                  thirdpartyapp_send_message: async (addr: string, package_name: string, data: string) => {
+                                    if (!window.wasmClient?.wasmModule?.thirdpartyapp_send_message) {
+                                      throw new Error('WASM模块未初始化或thirdpartyapp_send_message函数不可用')
+                                    }
+                                    return await window.wasmClient.wasmModule.thirdpartyapp_send_message(addr, package_name, data)
+                                  },
+                                  thirdpartyapp_uninstall: async (addr: string, package_name: string) => {
+                                    if (!window.wasmClient?.wasmModule?.thirdpartyapp_uninstall) {
+                                      throw new Error('WASM模块未初始化或thirdpartyapp_uninstall函数不可用')
+                                    }
+                                    return await window.wasmClient.wasmModule.thirdpartyapp_uninstall(addr, package_name)
+                                  },
+                                  
+                                  // 表盘相关
+                                  watchface_get_list: async (addr: string) => {
+                                    if (!window.wasmClient?.wasmModule?.watchface_get_list) {
+                                      throw new Error('WASM模块未初始化或watchface_get_list函数不可用')
+                                    }
+                                    return await window.wasmClient.wasmModule.watchface_get_list(addr)
+                                  },
+                                  watchface_set_current: async (addr: string, watchface_id: string) => {
+                                    if (!window.wasmClient?.wasmModule?.watchface_set_current) {
+                                      throw new Error('WASM模块未初始化或watchface_set_current函数不可用')
+                                    }
+                                    return await window.wasmClient.wasmModule.watchface_set_current(addr, watchface_id)
+                                  },
+                                  watchface_uninstall: async (addr: string, watchface_id: string) => {
+                                    if (!window.wasmClient?.wasmModule?.watchface_uninstall) {
+                                      throw new Error('WASM模块未初始化或watchface_uninstall函数不可用')
+                                    }
+                                    return await window.wasmClient.wasmModule.watchface_uninstall(addr, watchface_id)
+                                  },
+                                  
+                                  // 事件监听
+                                  register_event_sink: (callback: Function) => {
+                                    if (!window.wasmClient?.wasmModule?.register_event_sink) {
+                                      throw new Error('WASM模块未初始化或register_event_sink函数不可用')
+                                    }
+                                    return window.wasmClient.wasmModule.register_event_sink(callback)
+                                  },
+                                  
+                                  // 文件操作
+                                  miwear_get_file_type: async (file: Uint8Array, name: string) => {
+                                    if (!window.wasmClient?.wasmModule?.miwear_get_file_type) {
+                                      throw new Error('WASM模块未初始化或miwear_get_file_type函数不可用')
+                                    }
+                                    return await window.wasmClient.wasmModule.miwear_get_file_type(file, name)
+                                  },
+                                  miwear_install: async (addr: string, res_type: number, data: Uint8Array, package_name?: string, progress_cb?: Function) => {
+                                    if (!window.wasmClient?.wasmModule?.miwear_install) {
+                                      throw new Error('WASM模块未初始化或miwear_install函数不可用')
+                                    }
+                                    return await window.wasmClient.wasmModule.miwear_install(addr, res_type, data, package_name, progress_cb)
+                                  }
+                                },
+                                
+                                // 当前设备信息
+                                currentDevice: currentDevice,
+                                devices: devices,
+                                
+                                // 日志输出
+                                log: (message: string) => {
+                                  setLogs(prev => [...prev, `[脚本] ${message}`])
+                                  console.log(`[脚本] ${message}`)
+                                },
+                                
+                                // 工具函数
+                                utils: {
+                                  hexToBytes: (hex: string) => {
+                                    const bytes = new Uint8Array(hex.length / 2)
+                                    for (let i = 0; i < hex.length; i += 2) {
+                                      bytes[i / 2] = parseInt(hex.substr(i, 2), 16)
+                                    }
+                                    return bytes
+                                  },
+                                  bytesToHex: (bytes: Uint8Array) => {
+                                    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('')
+                                  }
+                                },
+                                
+                                // GUI创建功能
+                                gui: (config) => {
+                                  // 创建GUI容器
+                                  const container = document.createElement('div')
+                                  container.className = 'bandburg-gui-container'
+                                  container.style.cssText = `
+                                    position: fixed;
+                                    top: 50%;
+                                    left: 50%;
+                                    transform: translate(-50%, -50%);
+                                    background: white;
+                                    border: 2px solid black;
+                                    padding: 20px;
+                                    z-index: 10000;
+                                    min-width: 300px;
+                                    max-width: 90%;
+                                    max-height: 90%;
+                                    overflow-y: auto;
+                                    font-family: sans-serif;
+                                  `
+                                  
+                                  // 创建标题栏（包含标题和右上角关闭按钮）
+                                  const titleBar = document.createElement('div')
+                                  titleBar.style.cssText = `
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    margin-bottom: 20px;
+                                    border-bottom: 1px solid #ddd;
+                                    padding-bottom: 10px;
+                                  `
+                                  
+                                  if (config.title) {
+                                    const title = document.createElement('h3')
+                                    title.textContent = config.title
+                                    title.style.cssText = `
+                                      margin: 0;
+                                      font-weight: bold;
+                                      font-size: 1.2em;
+                                    `
+                                    titleBar.appendChild(title)
+                                  } else {
+                                    // 如果没有标题，添加占位符
+                                    const placeholder = document.createElement('div')
+                                    placeholder.style.cssText = `flex: 1;`
+                                    titleBar.appendChild(placeholder)
+                                  }
+                                  
+                                  // 右上角关闭按钮
+                                  const closeXButton = document.createElement('button')
+                                  closeXButton.innerHTML = '&times;' // ×符号
+                                  closeXButton.title = '关闭'
+                                  closeXButton.style.cssText = `
+                                    background: none;
+                                    border: none;
+                                    font-size: 24px;
+                                    cursor: pointer;
+                                    color: #333;
+                                    width: 30px;
+                                    height: 30px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    padding: 0;
+                                  `
+                                  
+                                  closeXButton.addEventListener('click', () => {
+                                    if (container.parentNode) {
+                                      container.parentNode.removeChild(container)
+                                    }
+                                  })
+                                  
+                                  closeXButton.addEventListener('mouseover', () => {
+                                    closeXButton.style.color = '#000'
+                                  })
+                                  
+                                  closeXButton.addEventListener('mouseout', () => {
+                                    closeXButton.style.color = '#333'
+                                  })
+                                  
+                                  titleBar.appendChild(closeXButton)
+                                  container.appendChild(titleBar)
+                                  
+                                  // 存储元素引用和值
+                                  const elements = {}
+                                  const values = {}
+                                  const eventListeners = {
+                                    'button:click': {},
+                                    'input:change': {},
+                                    'file:change': {}
+                                  }
+                                  
+                                  // 创建表单元素
+                                  config.elements?.forEach((element, index) => {
+                                    const elementId = element.id || `element_${index}`
+                                    
+                                    // 创建标签容器
+                                    const elementContainer = document.createElement('div')
+                                    elementContainer.style.cssText = `
+                                      margin-bottom: 15px;
+                                    `
+                                    
+                                    // 根据类型创建元素
+                                    switch (element.type) {
+                                      case 'label':
+                                        const label = document.createElement('div')
+                                        label.textContent = element.text || ''
+                                        label.style.cssText = `
+                                          padding: 8px;
+                                          background: #f5f5f5;
+                                          border: 1px solid #ddd;
+                                        `
+                                        elementContainer.appendChild(label)
+                                        break
+                                        
+                                      case 'input':
+                                        if (element.label) {
+                                          const inputLabel = document.createElement('label')
+                                          inputLabel.textContent = element.label
+                                          inputLabel.style.cssText = `
+                                            display: block;
+                                            margin-bottom: 5px;
+                                            font-weight: bold;
+                                          `
+                                          elementContainer.appendChild(inputLabel)
+                                        }
+                                        
+                                        const input = document.createElement('input')
+                                        input.type = 'text'
+                                        input.id = elementId
+                                        input.placeholder = element.placeholder || ''
+                                        input.value = element.value || ''
+                                        input.style.cssText = `
+                                          width: 100%;
+                                          padding: 8px;
+                                          border: 1px solid black;
+                                          box-sizing: border-box;
+                                        `
+                                        
+                                        input.addEventListener('change', () => {
+                                          values[elementId] = input.value
+                                          // 触发事件
+                                          const listeners = eventListeners['input:change'][elementId]
+                                          if (listeners) {
+                                            listeners.forEach(callback => callback(input.value))
+                                          }
+                                        })
+                                        
+                                        elementContainer.appendChild(input)
+                                        elements[elementId] = input
+                                        values[elementId] = input.value
+                                        break
+                                        
+                                      case 'button':
+                                        const button = document.createElement('button')
+                                        button.textContent = element.text || '按钮'
+                                        button.id = elementId
+                                        button.style.cssText = `
+                                          width: 100%;
+                                          padding: 12px;
+                                          background: black;
+                                          color: white;
+                                          border: none;
+                                          cursor: pointer;
+                                          font-weight: bold;
+                                        `
+                                        
+                                        button.addEventListener('click', () => {
+                                          // 触发事件
+                                          const listeners = eventListeners['button:click'][elementId]
+                                          if (listeners) {
+                                            listeners.forEach(callback => callback())
+                                          }
+                                        })
+                                        
+                                        elementContainer.appendChild(button)
+                                        elements[elementId] = button
+                                        break
+                                        
+                                      case 'file':
+                                        if (element.label) {
+                                          const fileLabel = document.createElement('label')
+                                          fileLabel.textContent = element.label
+                                          fileLabel.style.cssText = `
+                                            display: block;
+                                            margin-bottom: 5px;
+                                            font-weight: bold;
+                                          `
+                                          elementContainer.appendChild(fileLabel)
+                                        }
+                                        
+                                        const fileInput = document.createElement('input')
+                                        fileInput.type = 'file'
+                                        fileInput.id = elementId
+                                        if (element.accept) {
+                                          fileInput.accept = element.accept
+                                        }
+                                        fileInput.style.cssText = `
+                                          width: 100%;
+                                          padding: 8px;
+                                          border: 1px solid black;
+                                          box-sizing: border-box;
+                                        `
+                                        
+                                        fileInput.addEventListener('change', (e) => {
+                                          const file = e.target.files?.[0]
+                                          values[elementId] = file
+                                          // 触发事件
+                                          const listeners = eventListeners['file:change'][elementId]
+                                          if (listeners) {
+                                            listeners.forEach(callback => callback(file))
+                                          }
+                                        })
+                                        
+                                        elementContainer.appendChild(fileInput)
+                                        elements[elementId] = fileInput
+                                        break
+                                        
+                                      case 'textarea':
+                                        if (element.label) {
+                                          const textareaLabel = document.createElement('label')
+                                          textareaLabel.textContent = element.label
+                                          textareaLabel.style.cssText = `
+                                            display: block;
+                                            margin-bottom: 5px;
+                                            font-weight: bold;
+                                          `
+                                          elementContainer.appendChild(textareaLabel)
+                                        }
+                                        
+                                        const textarea = document.createElement('textarea')
+                                        textarea.id = elementId
+                                        textarea.placeholder = element.placeholder || ''
+                                        textarea.value = element.value || ''
+                                        textarea.style.cssText = `
+                                          width: 100%;
+                                          padding: 8px;
+                                          border: 1px solid black;
+                                          box-sizing: border-box;
+                                          min-height: 80px;
+                                        `
+                                        
+                                        textarea.addEventListener('change', () => {
+                                          values[elementId] = textarea.value
+                                          // 触发事件
+                                          const listeners = eventListeners['input:change'][elementId]
+                                          if (listeners) {
+                                            listeners.forEach(callback => callback(textarea.value))
+                                          }
+                                        })
+                                        
+                                        elementContainer.appendChild(textarea)
+                                        elements[elementId] = textarea
+                                        values[elementId] = textarea.value
+                                        break
+                                        
+                                      case 'select':
+                                        if (element.label) {
+                                          const selectLabel = document.createElement('label')
+                                          selectLabel.textContent = element.label
+                                          selectLabel.style.cssText = `
+                                            display: block;
+                                            margin-bottom: 5px;
+                                            font-weight: bold;
+                                          `
+                                          elementContainer.appendChild(selectLabel)
+                                        }
+                                        
+                                        const select = document.createElement('select')
+                                        select.id = elementId
+                                        select.style.cssText = `
+                                          width: 100%;
+                                          padding: 8px;
+                                          border: 1px solid black;
+                                          box-sizing: border-box;
+                                        `
+                                        
+                                        element.options?.forEach(option => {
+                                          const optionEl = document.createElement('option')
+                                          optionEl.value = option.value
+                                          optionEl.textContent = option.label || option.value
+                                          if (option.selected) optionEl.selected = true
+                                          select.appendChild(optionEl)
+                                        })
+                                        
+                                        select.addEventListener('change', () => {
+                                          values[elementId] = select.value
+                                          // 触发事件
+                                          const listeners = eventListeners['input:change'][elementId]
+                                          if (listeners) {
+                                            listeners.forEach(callback => callback(select.value))
+                                          }
+                                        })
+                                        
+                                        elementContainer.appendChild(select)
+                                        elements[elementId] = select
+                                        values[elementId] = select.value
+                                        break
+                                        
+                                      default:
+                                        // 未知类型，跳过
+                                        break
+                                    }
+                                    
+                                    container.appendChild(elementContainer)
+                                  })
+                                  
+                                  // 自动添加关闭按钮
+                                  const closeButtonContainer = document.createElement('div')
+                                  closeButtonContainer.style.cssText = `
+                                    margin-top: 20px;
+                                    display: flex;
+                                    justify-content: flex-end;
+                                  `
+                                  
+                                  const closeButton = document.createElement('button')
+                                  closeButton.textContent = '关闭'
+                                  closeButton.style.cssText = `
+                                    padding: 8px 16px;
+                                    background: #333;
+                                    color: white;
+                                    border: 1px solid black;
+                                    cursor: pointer;
+                                    font-weight: bold;
+                                  `
+                                  
+                                  closeButton.addEventListener('click', () => {
+                                    if (container.parentNode) {
+                                      container.parentNode.removeChild(container)
+                                    }
+                                  })
+                                  
+                                  closeButtonContainer.appendChild(closeButton)
+                                  container.appendChild(closeButtonContainer)
+                                  
+                                  // 添加到页面
+                                  document.body.appendChild(container)
+                                  
+                                  // 返回GUI控制器
+                                  return {
+                                    // 获取所有值
+                                    getValues: () => ({ ...values }),
+                                    
+                                    // 获取单个值
+                                    getValue: (id) => values[id],
+                                    
+                                    // 设置值
+                                    setValue: (id, value) => {
+                                      if (elements[id]) {
+                                        if (elements[id].type === 'file') {
+                                          // 文件输入不能直接设置值
+                                          console.warn('Cannot set value for file input directly')
+                                        } else {
+                                          elements[id].value = value
+                                          values[id] = value
+                                        }
+                                      }
+                                    },
+                                    
+                                    // 事件监听
+                                    on: (event, id, callback) => {
+                                      const eventType = event.split(':')[0]
+                                      const action = event.split(':')[1]
+                                      
+                                      if (!eventListeners[event]) {
+                                        eventListeners[event] = {}
+                                      }
+                                      
+                                      if (!eventListeners[event][id]) {
+                                        eventListeners[event][id] = []
+                                      }
+                                      
+                                      eventListeners[event][id].push(callback)
+                                    },
+                                    
+                                    // 关闭GUI
+                                    close: () => {
+                                      if (container.parentNode) {
+                                        container.parentNode.removeChild(container)
+                                      }
+                                    },
+                                    
+                                    // 显示GUI（默认已显示）
+                                    show: () => {
+                                      container.style.display = 'block'
+                                    },
+                                    
+                                    // 隐藏GUI
+                                    hide: () => {
+                                      container.style.display = 'none'
+                                    }
+                                  }
+                                }
+                              }
+                              
+                              // 执行用户脚本
+                              const userFunction = new Function('sandbox', `
+                                with (sandbox) {
+                                  try {
+                                    ${code}
+                                  } catch (error) {
+                                    log('脚本执行错误: ' + error.message)
+                                    console.error('脚本错误:', error)
+                                  }
+                                }
+                              `)
+                              
+                              userFunction(sandbox)
+                              setLogs(prev => [...prev, '✅ 脚本执行完成'])
+                              
+                            } catch (error) {
+                              setLogs(prev => [...prev, `❌ 脚本执行失败: ${error}`])
+                              console.error('脚本执行失败:', error)
+                            }
+                          }}
+                          className="bg-black text-white px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                        >
+                          执行脚本
+                        </button>
+                        <button 
+                          onClick={() => {
+                            const editor = document.getElementById('scriptEditor') as HTMLTextAreaElement
+                            editor.value = ''
+                          }}
+                          className="border-2 border-black bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                        >
+                          清空
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <textarea 
+                      id="scriptEditor"
+                      className="w-full h-64 border border-black p-4 font-mono text-sm bg-white text-black"
+                      placeholder="// 在这里编写 JavaScript 代码
+// 可以使用 sandbox.wasm.* 访问 WASM 接口
+// 例如：sandbox.wasm.thirdpartyapp_send_message('设备地址', '包名', '消息内容')"
+                      defaultValue={`// 示例脚本：发送消息到第三方应用
+// 需要先连接设备，然后执行此脚本
+
+async function sendMessageToApp() {
+  const log = sandbox.log
+  const wasm = sandbox.wasm
+  
+  // 检查是否有连接设备
+  if (!sandbox.currentDevice) {
+    log('❌ 没有连接设备，请先连接设备')
+    return
+  }
+  
+  const deviceAddr = sandbox.currentDevice.addr
+  const packageName = 'com.example.app' // 替换为实际包名
+  const message = 'Hello from BandBurg Script!'
+  
+  log(\`📤 准备发送消息到应用 \${packageName}\`)
+  
+  try {
+    // 发送消息
+    await wasm.thirdpartyapp_send_message(deviceAddr, packageName, message)
+    log(\`✅ 消息发送成功: "\${message}"\`)
+  } catch (error) {
+    log(\`❌ 消息发送失败: \${error}\`)
+  }
+}
+
+// 执行函数
+sendMessageToApp()`}
+                    ></textarea>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-xl font-bold mb-3">可用接口</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="border border-black p-4">
+                      <h4 className="font-bold mb-2">设备连接</h4>
+                      <ul className="text-sm space-y-1">
+                        <li><code>sandbox.wasm.miwear_connect()</code> - 连接设备</li>
+                        <li><code>sandbox.wasm.miwear_disconnect()</code> - 断开连接</li>
+                        <li><code>sandbox.wasm.miwear_get_connected_devices()</code> - 获取已连接设备</li>
+                        <li><code>sandbox.wasm.miwear_get_data()</code> - 获取设备数据</li>
+                      </ul>
+                    </div>
+                    <div className="border border-black p-4">
+                      <h4 className="font-bold mb-2">第三方应用</h4>
+                      <ul className="text-sm space-y-1">
+                        <li><code>sandbox.wasm.thirdpartyapp_get_list()</code> - 获取应用列表</li>
+                        <li><code>sandbox.wasm.thirdpartyapp_launch()</code> - 启动应用</li>
+                        <li><code>sandbox.wasm.thirdpartyapp_send_message()</code> - 发送消息</li>
+                        <li><code>sandbox.wasm.thirdpartyapp_uninstall()</code> - 卸载应用</li>
+                      </ul>
+                    </div>
+                    <div className="border border-black p-4">
+                      <h4 className="font-bold mb-2">表盘管理</h4>
+                      <ul className="text-sm space-y-1">
+                        <li><code>sandbox.wasm.watchface_get_list()</code> - 获取表盘列表</li>
+                        <li><code>sandbox.wasm.watchface_set_current()</code> - 设置当前表盘</li>
+                        <li><code>sandbox.wasm.watchface_uninstall()</code> - 卸载表盘</li>
+                      </ul>
+                    </div>
+                    <div className="border border-black p-4">
+                      <h4 className="font-bold mb-2">事件和工具</h4>
+                      <ul className="text-sm space-y-1">
+                        <li><code>sandbox.wasm.register_event_sink()</code> - 注册事件监听</li>
+                        <li><code>sandbox.log()</code> - 输出日志</li>
+                        <li><code>sandbox.currentDevice</code> - 当前连接设备</li>
+                        <li><code>sandbox.devices</code> - 所有保存的设备</li>
+                        <li><code>sandbox.gui()</code> - 创建GUI界面（JSON配置）</li>
+                        <li><code>sandbox.utils.hexToBytes()</code> - 十六进制字符串转字节数组</li>
+                        <li><code>sandbox.utils.bytesToHex()</code> - 字节数组转十六进制字符串</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="border-t border-black pt-6 mb-6">
+                  <h3 className="text-xl font-bold mb-3">GUI 功能详细文档</h3>
+                  <div className="space-y-4">
+                    <div className="border border-black p-4">
+                      <h4 className="font-bold mb-2">sandbox.gui(config)</h4>
+                      <p className="text-sm mb-3">创建一个模态GUI窗口，支持多种表单元素和事件监听。</p>
+                      
+                      <h5 className="font-bold mb-2 mt-4">配置参数 (config)</h5>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm border-collapse border border-black">
+                          <thead>
+                            <tr className="bg-gray-100">
+                              <th className="border border-black p-2">属性</th>
+                              <th className="border border-black p-2">类型</th>
+                              <th className="border border-black p-2">必填</th>
+                              <th className="border border-black p-2">说明</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">title</td>
+                              <td className="border border-black p-2">string</td>
+                              <td className="border border-black p-2">否</td>
+                              <td className="border border-black p-2">GUI窗口标题</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">elements</td>
+                              <td className="border border-black p-2">Array</td>
+                              <td className="border border-black p-2">是</td>
+                              <td className="border border-black p-2">元素配置数组，按顺序渲染</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      
+                      <h5 className="font-bold mb-2 mt-4">元素类型 (element)</h5>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm border-collapse border border-black">
+                          <thead>
+                            <tr className="bg-gray-100">
+                              <th className="border border-black p-2">type</th>
+                              <th className="border border-black p-2">支持属性</th>
+                              <th className="border border-black p-2">说明</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">label</td>
+                              <td className="border border-black p-2">text (string)</td>
+                              <td className="border border-black p-2">显示文本标签</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">input</td>
+                              <td className="border border-black p-2">id, label, placeholder, value</td>
+                              <td className="border border-black p-2">文本输入框，支持 change 事件</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">textarea</td>
+                              <td className="border border-black p-2">id, label, placeholder, value</td>
+                              <td className="border border-black p-2">多行文本输入，支持 change 事件</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">select</td>
+                              <td className="border border-black p-2">id, label, {'options[{value, label, selected}]'}</td>
+                              <td className="border border-black p-2">下拉选择框，支持 change 事件</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">button</td>
+                              <td className="border border-black p-2">id, text</td>
+                              <td className="border border-black p-2">按钮，支持 click 事件</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">file</td>
+                              <td className="border border-black p-2">id, label, accept</td>
+                              <td className="border border-black p-2">文件选择，支持 change 事件</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      
+                      <h5 className="font-bold mb-2 mt-4">返回值对象</h5>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm border-collapse border border-black">
+                          <thead>
+                            <tr className="bg-gray-100">
+                              <th className="border border-black p-2">方法</th>
+                              <th className="border border-black p-2">参数</th>
+                              <th className="border border-black p-2">返回值</th>
+                              <th className="border border-black p-2">说明</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">getValues()</td>
+                              <td className="border border-black p-2">无</td>
+                              <td className="border border-black p-2">Object</td>
+                              <td className="border border-black p-2">获取所有输入元素的当前值</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">getValue(id)</td>
+                              <td className="border border-black p-2">id (string)</td>
+                              <td className="border border-black p-2">any</td>
+                              <td className="border border-black p-2">获取指定ID元素的值</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">setValue(id, value)</td>
+                              <td className="border border-black p-2">id (string), value (any)</td>
+                              <td className="border border-black p-2">void</td>
+                              <td className="border border-black p-2">设置指定ID元素的值（文件输入除外）</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">on(event, id, callback)</td>
+                              <td className="border border-black p-2">event (string), id (string), callback (Function)</td>
+                              <td className="border border-black p-2">void</td>
+                              <td className="border border-black p-2">监听元素事件。事件格式：<br/>• button:click<br/>• input:change<br/>• file:change</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">close()</td>
+                              <td className="border border-black p-2">无</td>
+                              <td className="border border-black p-2">void</td>
+                              <td className="border border-black p-2">关闭GUI窗口</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">show()</td>
+                              <td className="border border-black p-2">无</td>
+                              <td className="border border-black p-2">void</td>
+                              <td className="border border-black p-2">显示GUI窗口</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-black p-2 font-mono">hide()</td>
+                              <td className="border border-black p-2">无</td>
+                              <td className="border border-black p-2">void</td>
+                              <td className="border border-black p-2">隐藏GUI窗口</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      
+                      <h5 className="font-bold mb-2 mt-4">使用示例</h5>
+                      <pre className="text-xs bg-gray-50 p-3 overflow-x-auto">
+{`const gui = sandbox.gui({
+  title: "示例窗口",
+  elements: [
+    { type: "label", text: "欢迎使用GUI功能" },
+    { type: "input", id: "name", label: "姓名", placeholder: "请输入姓名" },
+    { type: "button", id: "submit", text: "提交" }
+  ]
+})
+
+// 监听按钮点击
+gui.on("button:click", "submit", () => {
+  const values = gui.getValues()
+  sandbox.log(\`提交的值: \${values.name}\`)
+})
+
+// 获取当前值
+const currentValues = gui.getValues()`}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-xl font-bold mb-3">示例脚本</h3>
+                  <div className="space-y-4">
+                    <div className="border border-black p-4">
+                      <h4 className="font-bold mb-2">示例1：监听第三方应用消息</h4>
+                      <pre className="text-sm bg-gray-50 p-3 overflow-x-auto">
+{`// 监听第三方应用消息
+sandbox.wasm.register_event_sink((event) => {
+  if (event.type === 'thirdpartyapp_message') {
+    sandbox.log(\`📨 收到应用消息: \${event.package_name} - \${event.data}\`)
+    // 可以在这里处理消息
+  }
+})
+
+sandbox.log('✅ 事件监听器已注册，等待应用消息...')`}
+                      </pre>
+                      <button 
+                        onClick={() => {
+                          const editor = document.getElementById('scriptEditor') as HTMLTextAreaElement
+                          editor.value = `// 监听第三方应用消息
+sandbox.wasm.register_event_sink((event) => {
+  if (event.type === 'thirdpartyapp_message') {
+    sandbox.log(\`📨 收到应用消息: \${event.package_name} - \${event.data}\`)
+    // 可以在这里处理消息
+  }
+})
+
+sandbox.log('✅ 事件监听器已注册，等待应用消息...')`
+                        }}
+                        className="mt-2 border border-black bg-white text-black px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
+                      >
+                        加载此示例
+                      </button>
+                    </div>
+                    
+                    <div className="border border-black p-4">
+                      <h4 className="font-bold mb-2">示例2：批量发送消息</h4>
+                      <pre className="text-sm bg-gray-50 p-3 overflow-x-auto">
+{`// 批量发送消息到多个应用
+async function batchSendMessages() {
+  const deviceAddr = sandbox.currentDevice?.addr
+  if (!deviceAddr) {
+    sandbox.log('❌ 没有连接设备')
+    return
+  }
+  
+  const messages = [
+    { package: 'com.example.app1', message: 'Hello App1' },
+    { package: 'com.example.app2', message: 'Hello App2' },
+    { package: 'com.example.app3', message: 'Hello App3' }
+  ]
+  
+  for (const msg of messages) {
+    try {
+      await sandbox.wasm.thirdpartyapp_send_message(deviceAddr, msg.package, msg.message)
+      sandbox.log(\`✅ 发送成功: \${msg.package}\`)
+    } catch (error) {
+      sandbox.log(\`❌ 发送失败 \${msg.package}: \${error}\`)
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000)) // 等待1秒
+  }
+  
+  sandbox.log('🎉 批量发送完成')
+}
+
+// 执行函数
+batchSendMessages()`}
+                      </pre>
+                      <button 
+                        onClick={() => {
+                          const editor = document.getElementById('scriptEditor') as HTMLTextAreaElement
+                          editor.value = `// 批量发送消息到多个应用
+async function batchSendMessages() {
+  const deviceAddr = sandbox.currentDevice?.addr
+  if (!deviceAddr) {
+    sandbox.log('❌ 没有连接设备')
+    return
+  }
+  
+  const messages = [
+    { package: 'com.example.app1', message: 'Hello App1' },
+    { package: 'com.example.app2', message: 'Hello App2' },
+    { package: 'com.example.app3', message: 'Hello App3' }
+  ]
+  
+  for (const msg of messages) {
+    try {
+      await sandbox.wasm.thirdpartyapp_send_message(deviceAddr, msg.package, msg.message)
+      sandbox.log(\`✅ 发送成功: \${msg.package}\`)
+    } catch (error) {
+      sandbox.log(\`❌ 发送失败 \${msg.package}: \${error}\`)
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000)) // 等待1秒
+  }
+  
+  sandbox.log('🎉 批量发送完成')
+}
+
+// 执行函数
+batchSendMessages()`
+                        }}
+                        className="mt-2 border border-black bg-white text-black px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
+                      >
+                        加载此示例
+                      </button>
+                    </div>
+                    
+                    <div className="border border-black p-4">
+                      <h4 className="font-bold mb-2">示例3：设备数据监控</h4>
+                      <pre className="text-sm bg-gray-50 p-3 overflow-x-auto">
+{`// 定期获取设备数据
+async function monitorDeviceData() {
+  const deviceAddr = sandbox.currentDevice?.addr
+  if (!deviceAddr) {
+    sandbox.log('❌ 没有连接设备')
+    return
+  }
+  
+  // 监控循环
+  let count = 0
+  const maxCount = 10
+  
+  while (count < maxCount) {
+    try {
+      // 获取电池数据
+      const batteryData = await sandbox.wasm.miwear_get_data(deviceAddr, 'battery')
+      sandbox.log(\`🔋 电池状态: \${JSON.stringify(batteryData)}\`)
+      
+      // 获取存储数据
+      const storageData = await sandbox.wasm.miwear_get_data(deviceAddr, 'storage')
+      sandbox.log(\`💾 存储状态: \${JSON.stringify(storageData)}\`)
+      
+      count++
+      sandbox.log(\`📊 监控次数: \${count}/\${maxCount}\`)
+      
+      if (count < maxCount) {
+        await new Promise(resolve => setTimeout(resolve, 5000)) // 等待5秒
+      }
+    } catch (error) {
+      sandbox.log(\`❌ 获取数据失败: \${error}\`)
+      break
+    }
+  }
+  
+  sandbox.log('📈 设备监控完成')
+}
+
+// 执行函数
+monitorDeviceData()`}
+                      </pre>
+                      <button 
+                        onClick={() => {
+                          const editor = document.getElementById('scriptEditor') as HTMLTextAreaElement
+                          editor.value = `// 定期获取设备数据
+async function monitorDeviceData() {
+  const deviceAddr = sandbox.currentDevice?.addr
+  if (!deviceAddr) {
+    sandbox.log('❌ 没有连接设备')
+    return
+  }
+  
+  // 监控循环
+  let count = 0
+  const maxCount = 10
+  
+  while (count < maxCount) {
+    try {
+      // 获取电池数据
+      const batteryData = await sandbox.wasm.miwear_get_data(deviceAddr, 'battery')
+      sandbox.log(\`🔋 电池状态: \${JSON.stringify(batteryData)}\`)
+      
+      // 获取存储数据
+      const storageData = await sandbox.wasm.miwear_get_data(deviceAddr, 'storage')
+      sandbox.log(\`💾 存储状态: \${JSON.stringify(storageData)}\`)
+      
+      count++
+      sandbox.log(\`📊 监控次数: \${count}/\${maxCount}\`)
+      
+      if (count < maxCount) {
+        await new Promise(resolve => setTimeout(resolve, 5000)) // 等待5秒
+      }
+    } catch (error) {
+      sandbox.log(\`❌ 获取数据失败: \${error}\`)
+      break
+    }
+  }
+  
+  sandbox.log('📈 设备监控完成')
+}
+
+// 执行函数
+monitorDeviceData()`
+                        }}
+                        className="mt-2 border border-black bg-white text-black px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
+                      >
+                        加载此示例
+                      </button>
+                    </div>
+                    
+                    <div className="border border-black p-4">
+                      <h4 className="font-bold mb-2">示例4：GUI界面创建</h4>
+                      <pre className="text-sm bg-gray-50 p-3 overflow-x-auto">
+{`// 创建GUI界面
+const guiConfig = {
+  title: '设备控制面板',
+  elements: [
+    {
+      type: 'label',
+      text: '这是一个示例GUI界面'
+    },
+    {
+      type: 'input',
+      id: 'deviceName',
+      label: '设备名称',
+      placeholder: '请输入设备名称',
+      value: ''
+    },
+    {
+      type: 'select',
+      id: 'operation',
+      label: '操作类型',
+      options: [
+        { value: 'connect', label: '连接设备' },
+        { value: 'disconnect', label: '断开设备' },
+        { value: 'getData', label: '获取数据' }
+      ]
+    },
+    {
+      type: 'button',
+      id: 'submit',
+      text: '执行操作'
+    },
+    {
+      type: 'file',
+      id: 'fileInput',
+      label: '选择文件',
+      accept: '.bin,.zip'
+    }
+  ]
+}
+
+// 创建GUI
+const gui = sandbox.gui(guiConfig)
+
+// 监听按钮点击事件
+gui.on('button:click', 'submit', () => {
+  const values = gui.getValues()
+  sandbox.log(\`🎯 按钮被点击，当前值：\${JSON.stringify(values)}\`)
+  
+  // 根据选择的操作类型执行相应操作
+  if (values.operation === 'connect') {
+    sandbox.log('正在连接设备...')
+  } else if (values.operation === 'disconnect') {
+    sandbox.log('正在断开设备...')
+  } else if (values.operation === 'getData') {
+    sandbox.log('正在获取设备数据...')
+  }
+})
+
+// 监听输入框变化
+gui.on('input:change', 'deviceName', (value) => {
+  sandbox.log(\`📝 设备名称已修改为: \${value}\`)
+})
+
+// 监听文件选择
+gui.on('file:change', 'fileInput', (file) => {
+  if (file) {
+    sandbox.log(\`📁 已选择文件: \${file.name} (\${file.size} 字节)\`)
+  }
+})
+
+sandbox.log('✅ GUI界面已创建，请与界面交互')`}
+                      </pre>
+                      <button 
+                        onClick={() => {
+                          const editor = document.getElementById('scriptEditor') as HTMLTextAreaElement
+                          editor.value = `// 创建GUI界面
+const guiConfig = {
+  title: '设备控制面板',
+  elements: [
+    {
+      type: 'label',
+      text: '这是一个示例GUI界面'
+    },
+    {
+      type: 'input',
+      id: 'deviceName',
+      label: '设备名称',
+      placeholder: '请输入设备名称',
+      value: ''
+    },
+    {
+      type: 'select',
+      id: 'operation',
+      label: '操作类型',
+      options: [
+        { value: 'connect', label: '连接设备' },
+        { value: 'disconnect', label: '断开设备' },
+        { value: 'getData', label: '获取数据' }
+      ]
+    },
+    {
+      type: 'button',
+      id: 'submit',
+      text: '执行操作'
+    },
+    {
+      type: 'file',
+      id: 'fileInput',
+      label: '选择文件',
+      accept: '.bin,.zip'
+    }
+  ]
+}
+
+// 创建GUI
+const gui = sandbox.gui(guiConfig)
+
+// 监听按钮点击事件
+gui.on('button:click', 'submit', () => {
+  const values = gui.getValues()
+  sandbox.log(\`🎯 按钮被点击，当前值：\${JSON.stringify(values)}\`)
+  
+  // 根据选择的操作类型执行相应操作
+  if (values.operation === 'connect') {
+    sandbox.log('正在连接设备...')
+  } else if (values.operation === 'disconnect') {
+    sandbox.log('正在断开设备...')
+  } else if (values.operation === 'getData') {
+    sandbox.log('正在获取设备数据...')
+  }
+})
+
+// 监听输入框变化
+gui.on('input:change', 'deviceName', (value) => {
+  sandbox.log(\`📝 设备名称已修改为: \${value}\`)
+})
+
+// 监听文件选择
+gui.on('file:change', 'fileInput', (file) => {
+  if (file) {
+    sandbox.log(\`📁 已选择文件: \${file.name} (\${file.size} 字节)\`)
+  }
+})
+
+sandbox.log('✅ GUI界面已创建，请与界面交互')`
+                        }}
+                        className="mt-2 border border-black bg-white text-black px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
+                      >
+                        加载此示例
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="border-t border-black pt-6">
+                  <h3 className="text-xl font-bold mb-3">安全提示</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    <strong>⚠️ 重要安全提示：</strong> Script 功能允许执行任意 JavaScript 代码。请确保：
+                  </p>
+                  <ul className="list-disc pl-5 text-sm text-gray-600 mt-2 space-y-1">
+                    <li>仅运行来自可信来源的脚本</li>
+                    <li>脚本可以访问设备数据和执行设备操作</li>
+                    <li>不当使用可能导致设备数据丢失或损坏</li>
+                    <li>脚本在沙箱环境中运行，但仍有访问 WASM 接口的权限</li>
+                    <li>建议在执行前检查脚本内容</li>
+                  </ul>
                 </div>
               </div>
             </div>
