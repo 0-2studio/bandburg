@@ -73,6 +73,14 @@ interface ScriptProgram {
   description?: string
 }
 
+// Script市场脚本类型定义
+interface MarketScript {
+  name: string
+  author: string
+  url: string
+  description?: string
+}
+
 // 表盘类型定义
 interface Watchface {
   id: string
@@ -116,6 +124,11 @@ function App() {
     }
   })
   const [selectedScriptId, setSelectedScriptId] = useState<string>('')
+  
+  // Script市场相关状态
+  const [showScriptMarket, setShowScriptMarket] = useState(false)
+  const [marketScripts, setMarketScripts] = useState<MarketScript[]>([])
+  const [loadingMarket, setLoadingMarket] = useState(false)
   
   // 设备表单状态
   const [deviceForm, setDeviceForm] = useState<Omit<Device, 'id'>>({
@@ -194,7 +207,13 @@ function App() {
     }
   }, [])
   
-
+  
+  // 当显示Script市场时自动加载脚本列表
+  useEffect(() => {
+    if (showScriptMarket && marketScripts.length === 0 && !loadingMarket) {
+      fetchMarketScripts()
+    }
+  }, [showScriptMarket, marketScripts.length, loadingMarket])
   
   // 加载保存的设备
   const loadSavedDevices = () => {
@@ -208,6 +227,87 @@ function App() {
     } catch (error) {
       addLog('加载设备列表失败', 'error')
     }
+  }
+  
+  // 获取Script市场脚本列表
+  const fetchMarketScripts = () => {
+    setLoadingMarket(true)
+    return new Promise<void>((resolve) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open('GET', 'https://bandburgscript.02studio.xyz/scripts.json')
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            try {
+              const scripts = JSON.parse(xhr.responseText)
+              setMarketScripts(scripts)
+              addLog(`已加载 ${scripts.length} 个市场脚本`, 'success')
+            } catch (parseError: any) {
+              addLog(`解析JSON失败: ${parseError.message}`, 'error')
+            }
+          } else {
+            addLog(`HTTP错误: ${xhr.status} ${xhr.statusText}`, 'error')
+          }
+          setLoadingMarket(false)
+          resolve()
+        }
+      }
+      xhr.onerror = () => {
+        addLog('网络请求失败，请检查网络连接或CORS策略', 'error')
+        setLoadingMarket(false)
+        resolve()
+      }
+      xhr.send()
+    })
+  }
+  
+  // 安装市场脚本
+  const installMarketScript = async (script: MarketScript) => {
+    addLog(`正在安装脚本: ${script.name}`, 'info')
+    
+    return new Promise<void>((resolve) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open('GET', script.url)
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            const code = xhr.responseText
+            
+            // 创建新的脚本程序
+            const newScript: ScriptProgram = {
+              id: Date.now().toString(),
+              name: script.name,
+              code,
+              description: `作者: ${script.author}${script.description ? ` - ${script.description}` : ''}`,
+              createdAt: Date.now(),
+              updatedAt: Date.now()
+            }
+            
+            // 添加到保存的脚本列表
+            const updatedScripts = [...savedScripts, newScript]
+            setSavedScripts(updatedScripts)
+            localStorage.setItem('bandburg_saved_scripts', JSON.stringify(updatedScripts))
+            
+            addLog(`脚本 "${script.name}" 安装成功`, 'success')
+            
+            // 自动切换到新安装的脚本
+            setSelectedScriptId(newScript.id)
+            const editor = document.getElementById('scriptEditor') as HTMLTextAreaElement
+            if (editor) {
+              editor.value = code
+            }
+          } else {
+            addLog(`下载失败: ${xhr.status} ${xhr.statusText}`, 'error')
+          }
+          resolve()
+        }
+      }
+      xhr.onerror = () => {
+        addLog('网络请求失败，请检查网络连接或CORS策略', 'error')
+        resolve()
+      }
+      xhr.send()
+    })
   }
   
   // 保存设备
@@ -1802,10 +1902,73 @@ function App() {
           <div className="main-content">
             {/* Script页面 - JS代码编辑器和执行环境 */}
             <div className="border border-black p-8">
-              <h2 className="text-3xl font-bold mb-6">Script 脚本执行环境</h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-bold">Script 脚本执行</h2>
+                <button 
+                  onClick={() => {
+                    setShowScriptMarket(true)
+                  }}
+                  className="border border-black bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                >
+                  Script市场
+                </button>
+              </div>
               
               <div className="space-y-8">
-                <div>
+                {showScriptMarket && (
+                  // Script市场页面
+                  <div className="border border-black p-6 mb-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-2xl font-bold">Script市场</h3>
+                      <button
+                        onClick={() => setShowScriptMarket(false)}
+                        className="border border-black bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                      >
+                        返回编辑器
+                      </button>
+                    </div>
+                    
+                    {loadingMarket ? (
+                      <div className="text-center py-8">
+                        <p>加载脚本列表中...</p>
+                      </div>
+                    ) : marketScripts.length === 0 ? (
+                      <div className="text-center py-8">
+                        <p>点击按钮加载脚本列表</p>
+                        <button
+                          onClick={fetchMarketScripts}
+                          className="mt-4 border border-black bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                        >
+                          加载脚本列表
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {marketScripts.map((script, index) => (
+                          <div key={index} className="border border-black p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="text-xl font-bold">{script.name}</h4>
+                                <p className="text-sm text-gray-500">作者: {script.author}</p>
+                                {script.description && (
+                                  <p className="mt-2">{script.description}</p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => installMarketScript(script)}
+                                className="border border-black bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                              >
+                                安装
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                <div style={{ display: showScriptMarket ? 'none' : 'block' }}>
                   <h3 className="text-xl font-bold mb-3">脚本编辑器</h3>
                   
                   {/* 程序管理工具栏 */}
@@ -1946,6 +2109,7 @@ function App() {
                           >
                             新建
                           </button>
+
                         </div>
                       </div>
                     </div>
