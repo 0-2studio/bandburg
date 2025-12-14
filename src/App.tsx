@@ -1773,7 +1773,7 @@ function App() {
                   <div className="border border-black p-4">
                     <div className="flex-between mb-2">
                       <span className="font-bold">当前版本</span>
-                      <span className="font-bold">v1.0.0</span>
+                      <span className="font-bold">v1.0.1</span>
                     </div>
                     <div className="flex-between">
                       <span>WASM 模块版本</span>
