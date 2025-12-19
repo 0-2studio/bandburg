@@ -81,6 +81,15 @@ interface MarketScript {
   description?: string
 }
 
+// 右上角提示类型定义
+interface Toast {
+  id: string
+  message: string
+  type: 'info' | 'success' | 'error' | 'warning'
+  timestamp: number
+  visible: boolean
+}
+
 // 表盘类型定义
 interface Watchface {
   id: string
@@ -160,6 +169,9 @@ function App() {
   const [installMessage, setInstallMessage] = useState('')
   const [resType, setResType] = useState<number>(0) // 资源类型：0=自动检测, 16=表盘, 32=固件, 64=快应用
   const [packageName, setPackageName] = useState<string>('') // 包名（可选）
+  
+  // 右上角提示状态
+  const [toasts, setToasts] = useState<Toast[]>([])
   
   // 初始化加载保存的设备
   useEffect(() => {
@@ -1280,6 +1292,30 @@ function App() {
     const timestamp = new Date().toLocaleTimeString()
     const coloredMessage = `[${timestamp}] ${message}`
     setLogs(prev => [coloredMessage, ...prev.slice(0, 99)]) // 保留最近100条
+    
+    // 同时添加到右上角提示
+    const toastId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const newToast: Toast = {
+      id: toastId,
+      message: message,
+      type: type,
+      timestamp: Date.now(),
+      visible: true
+    }
+    
+    // 添加到toasts数组（最新在最前面）
+    setToasts(prev => [newToast, ...prev.slice(0, 9)]) // 最多保留10个提示
+    
+    // 5秒后开始渐隐，6秒后移除
+    setTimeout(() => {
+      setToasts(prev => prev.map(toast => 
+        toast.id === toastId ? { ...toast, visible: false } : toast
+      ))
+      
+      setTimeout(() => {
+        setToasts(prev => prev.filter(toast => toast.id !== toastId))
+      }, 500)
+    }, 1000)
   }
   
   // 清空日志
@@ -1391,6 +1427,36 @@ function App() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* 右上角提示容器 */}
+      <div className="fixed top-6 right-6 z-50 flex flex-col items-end space-y-2 max-w-sm">
+        {toasts.map((toast, index) => (
+          <div
+            key={toast.id}
+            className={`transform transition-all duration-300 ease-out ${toast.visible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'} ${
+              index === 0 ? 'bg-black text-white' : 'bg-white text-black border border-black'
+            } px-4 py-3 rounded shadow-lg`}
+            style={{
+              transitionDelay: `${index * 50}ms`,
+              transformOrigin: 'right center'
+            }}
+          >
+            <div className="flex items-start">
+              <div className="flex-1">
+                <div className="font-medium">
+                  {toast.type === 'success' && '✓ '}
+                  {toast.type === 'error' && '✗ '}
+                  {toast.type === 'warning' && '⚠ '}
+                  {toast.message}
+                </div>
+                <div className="text-xs opacity-80 mt-1">
+                  {new Date(toast.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      
       {/* 顶部区域：左上角品牌标识 + 移动端汉堡菜单按钮 */}
       <div className="border-b border-gray-200 py-4 px-6">
         <div className="flex items-center justify-between">
@@ -2247,7 +2313,7 @@ function App() {
                                 
                                 // 日志输出
                                 log: (message: string) => {
-                                  setLogs(prev => [...prev, `[脚本] ${message}`])
+                                  addLog(`[脚本] ${message}`, 'info')
                                   console.log(`[脚本] ${message}`)
                                 },
                                 
