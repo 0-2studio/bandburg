@@ -122,7 +122,7 @@ function App() {
   const [isMobile, setIsMobile] = useState(false)
   const [activeNav, setActiveNav] = useState<'device' | 'about' | 'script'>('device')
   const [activeTab, setActiveTab] = useState<'watchfaces' | 'apps' | 'install'>('watchfaces')
-  const [logs, setLogs] = useState<string[]>(['欢迎使用 BandBurg - 小米手环管理工具'])
+  const [logs, setLogs] = useState<string[]>(['欢迎使用 BandBurg - Vela 设备管理工具'])
   const [savedScripts, setSavedScripts] = useState<ScriptProgram[]>(() => {
     // 从localStorage加载保存的脚本
     try {
@@ -1432,8 +1432,8 @@ function App() {
         {toasts.map((toast, index) => (
           <div
             key={toast.id}
-            className={`transform transition-all duration-300 ease-out ${toast.visible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'} ${
-              index === 0 ? '' : 'bg-white text-black '
+            className={`bg-white transform transition-all duration-300 ease-out ${toast.visible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'} ${
+              index === 0 ? 'device-item-current' : ' text-black'
             } px-4 py-3 rounded shadow-lg`}
             style={{
               transitionDelay: `${index * 50}ms`,
@@ -1888,7 +1888,7 @@ function App() {
                 <div>
                   <h3 className="text-xl font-bold mb-3">项目介绍</h3>
                   <p className="leading-relaxed">
-                    BandBurg 是一个基于 WebAssembly (WASM) 的现代化 Web 界面，用于管理小米手环系列设备。
+                    BandBurg 是一个基于 WebAssembly (WASM) 的现代化 Web 界面，用于管理 Vela 设备系列设备。
                     通过浏览器即可连接、配置和安装表盘/应用到您的手环设备，无需安装任何额外软件。
                     本项目由 ASTROBOX 提供技术支持。
                   </p>
@@ -1924,7 +1924,7 @@ function App() {
                         <li>Web Bluetooth API</li>
                         <li>WebAssembly</li>
                         <li>SPP / BLE 连接</li>
-                        <li>小米手环通信协议</li>
+                        <li>Vela 设备通信协议</li>
                       </ul>
                     </div>
                   </div>
@@ -3508,7 +3508,7 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
 
       {/* 添加/编辑设备表单弹窗 */}
       {showDeviceForm && (
-        <div className="fixed inset-0 z-50 overlay-container">
+        <div className="fixed inset-0 z-30 overlay-container">
           <div className="overlay">
             <div className="flex-between margin-bottom-lg overlay-title">
               <h2 className="text-white">添加新设备</h2>

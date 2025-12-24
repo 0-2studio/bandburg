@@ -174,7 +174,7 @@ const BrowserNotSupported = ({ compatibilityResults }: { compatibilityResults: a
                 {!webBluetooth.supported && (
                   <>
                     <li><strong>Web Bluetooth API</strong>: 设备发现</li>
-                    <li>没有 Web Bluetooth API，无法搜索附近小米手环</li>
+                    <li>没有 Web Bluetooth API，无法搜索附近 Vela 设备</li>
                   </>
                 )}
               </ul>

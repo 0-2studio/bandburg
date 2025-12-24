@@ -1,7 +1,7 @@
 {
   "name": "miband-web-control",
   "version": "1.0.0",
-  "description": "Web控制小米手环程序 - 基于WASM的Web界面",
+  "description": "Web控制Vela设备程序 - 基于WASM的Web界面",
   "main": "dist/index.html",
   "scripts": {
     "start": "vite --port 3000",
