@@ -122,7 +122,7 @@ function App() {
   const [isMobile, setIsMobile] = useState(false)
   const [activeNav, setActiveNav] = useState<'device' | 'about' | 'script'>('device')
   const [activeTab, setActiveTab] = useState<'watchfaces' | 'apps' | 'install'>('watchfaces')
-  const [logs, setLogs] = useState<string[]>(['欢迎使用 BandBurg - 小米手环管理工具'])
+  const [logs, setLogs] = useState<string[]>(['欢迎使用 BandBurg - Vela 设备管理工具'])
   const [savedScripts, setSavedScripts] = useState<ScriptProgram[]>(() => {
     // 从localStorage加载保存的脚本
     try {
@@ -1315,7 +1315,7 @@ function App() {
       setTimeout(() => {
         setToasts(prev => prev.filter(toast => toast.id !== toastId))
       }, 500)
-    }, 1000)
+    }, 2000)
   }
   
   // 清空日志
@@ -1426,14 +1426,14 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* 右上角提示容器 */}
       <div className="fixed top-6 right-6 z-50 flex flex-col items-end space-y-2 max-w-sm">
         {toasts.map((toast, index) => (
           <div
             key={toast.id}
-            className={`transform transition-all duration-300 ease-out ${toast.visible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'} ${
-              index === 0 ? 'bg-black text-white' : 'bg-white text-black border border-black'
+            className={`bg-white transform transition-all duration-300 ease-out ${toast.visible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'} ${
+              index === 0 ? 'device-item-current' : ' text-black'
             } px-4 py-3 rounded shadow-lg`}
             style={{
               transitionDelay: `${index * 50}ms`,
@@ -1443,9 +1443,11 @@ function App() {
             <div className="flex items-start">
               <div className="flex-1">
                 <div className="font-medium">
-                  {toast.type === 'success' && '✓ '}
-                  {toast.type === 'error' && '✗ '}
-                  {toast.type === 'warning' && '⚠ '}
+                  <span className="icon-font" style={{fontSize:"unset", marginRight:`${toast.type === 'info' ? '0' : '5px'}`, color:"unset"}}>
+                    {toast.type === 'success' && '󰀈'}
+                    {toast.type === 'error' && '󰀉'}
+                    {toast.type === 'warning' && '󰀟'}
+                  </span>
                   {toast.message}
                 </div>
                 <div className="text-xs opacity-80 mt-1">
@@ -1458,29 +1460,45 @@ function App() {
       </div>
       
       {/* 顶部区域：左上角品牌标识 + 移动端汉堡菜单按钮 */}
-      <div className="border-b border-gray-200 py-4 px-6">
-        <div className="flex items-center justify-between">
+      <div className="border-b border-gray-200 py-4 px-6 fixed z-10" style={{ background:"white", border:"none", width:"100%"}}>
+        <div className="flex items-center justify-between" style={{ maxWidth:"1166px", height:"28px", margin:"0 auto"}}>
           <div className="flex items-center">
             <img src="/icon.png" alt="BandBurg Logo" className="w-8 h-8 mr-3" />
             <h1 className="brand-logo">BANDBURG</h1>
           </div>
-          {/* 移动端汉堡菜单按钮 */}
-          {isMobile && (
-            <button 
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-md hover:bg-gray-100 z-30 relative"
-              aria-label="切换侧边栏"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          )}
+          <div className="flex items-center nav-pc">
+            <div className={`cursor-pointer nav-pair ${activeNav === 'device' ? '' : 'opacity-50'}`} onClick={() => {setActiveNav('device')}}>
+              <button className='icon-font'>󰁾</button>
+              设备
+            </div>
+            <div className={`cursor-pointer nav-pair ${activeNav === 'script' ? '' : 'opacity-50'}`} onClick={() => {setActiveNav('script')}}>
+              <button className='icon-font'>󰀚</button>
+              脚本
+            </div>
+            <div className={`cursor-pointer nav-pair ${activeNav === 'about' ? '' : 'opacity-50'}`} onClick={() => {setActiveNav('about')}}>
+              <button className='icon-font'>󰀦</button>
+              关于
+            </div>
+          </div>
         </div>
       </div>
 
+      {isMobile && (
+        <button 
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-2 rounded-md hover:bg-gray-100 z-30 relative icon-font"
+          style={{position: "fixed",right: "20px",top: "22px",fontSize: "24px"}}
+          aria-label="切换侧边栏"
+        >
+          {/* <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg> */}
+          󰀙
+        </button>
+      )}
+
       {/* 主布局 */}
-      <div className="flex h-[calc(100vh-80px)]">
+      <div className="flex page-container">
         {/* 左侧导航栏 - 响应式可收缩 */}
         {/* 移动端遮罩层，侧边栏打开时显示 */}
         {isMobile && sidebarOpen && (
@@ -1496,7 +1514,7 @@ function App() {
           ${isMobile ? 'fixed inset-y-0 left-0 z-20 transform transition-transform duration-300 ease-in-out' : ''}
           ${isMobile && !sidebarOpen ? '-translate-x-full' : ''}
         `}>
-          <div className="py-6">
+          <div>
             <div 
               className={`nav-item ${activeNav === 'device' ? 'nav-item-selected' : 'nav-item-unselected'}`}
               onClick={() => {
@@ -1509,6 +1527,17 @@ function App() {
               <span>设备</span>
             </div>
             <div 
+              className={`nav-item ${activeNav === 'script' ? 'nav-item-selected' : 'nav-item-unselected'}`}
+              onClick={() => {
+                setActiveNav('script')
+                if (isMobile) {
+                  setSidebarOpen(false)
+                }
+              }}
+            >
+              <span>脚本</span>
+            </div>
+            <div 
               className={`nav-item ${activeNav === 'about' ? 'nav-item-selected' : 'nav-item-unselected'}`}
               onClick={() => {
                 setActiveNav('about')
@@ -1519,17 +1548,6 @@ function App() {
             >
               <span>关于</span>
             </div>
-            <div 
-              className={`nav-item ${activeNav === 'script' ? 'nav-item-selected' : 'nav-item-unselected'}`}
-              onClick={() => {
-                setActiveNav('script')
-                if (isMobile) {
-                  setSidebarOpen(false)
-                }
-              }}
-            >
-              <span>Script</span>
-            </div>
           </div>
         </div>
 
@@ -1537,13 +1555,17 @@ function App() {
         {activeNav === 'device' ? (
           <div className="main-content">
             {/* 「当前连接设备」信息栏 */}
-            <div className="info-bar mb-6">
+            <div className="info-bar margin-bottom-lg">
               <div className="flex-between">
                 <div>
                   <h2 className="info-title">{currentDevice ? currentDevice.name : '暂未连接设备'}</h2>
                   <div className="flex items-center mt-2">
-                    <Icon name="battery-full" className="mr-2" />
-                    <span>电池：{deviceInfo.batteryPercent}%</span>
+                    {/* <Icon name="battery-full" className="mr-2" /> */}
+                    <div style={{margin: "-5px 4px -5px -3px"}}>
+                      <img src="/battery.png" style={{height: "28px"}}/>
+                      <div style={{position: "absolute",width: `${deviceInfo.batteryPercent * 0.25}px`,height: "10px",marginTop: "-19px",marginLeft: "7px",borderRadius: "2px",background: "#262626"}}></div>
+                    </div>
+                    <span>{deviceInfo.batteryPercent}%</span>
                   </div>
                   <div className="info-stats">
                     总空间：{deviceInfo.totalStorage} 已使用：{deviceInfo.usedStorage}
@@ -1571,13 +1593,13 @@ function App() {
             </div>
 
             {/* 「已经保存设备」模块 */}
-            <div className="dropdown-section mb-6">
+            <div className="dropdown-section margin-bottom-lg">
               <div 
                 className="dropdown-header cursor-pointer"
                 onClick={() => setDevicesCollapsed(!devicesCollapsed)}
               >
                 <h3 className="dropdown-title">已经保存设备</h3>
-                <span className="dropdown-arrow">{devicesCollapsed ? '▶' : '▼'}</span>
+                <button className="dropdown-arrow icon-font">󰂈</button>
               </div>
               {!devicesCollapsed && (
                 <div className="dropdown-content">
@@ -1630,7 +1652,8 @@ function App() {
               }}
               className="btn-add-device"
             >
-              + 添加新设备
+              <span className="icon-font" style={{fontSize:"unset", marginRight:"5px"}}>󰁿</span>
+              添加新设备
             </button>
 
             {/* 标签切换栏 */}
@@ -1656,29 +1679,30 @@ function App() {
             </div>
 
             {/* 主内容区域 - 根据标签显示不同内容 */}
-            <div className="mt-6">
+            <div className="info-bar">
               {/* 表盘管理 */}
               {activeTab === 'watchfaces' && (
                 <div>
-                  <div className="flex-between mb-6">
+                  <div className="flex-between margin-bottom-bg">
                     <h3 className="text-lg font-bold">表盘列表</h3>
                     <button 
                       onClick={loadWatchfaces}
-                      className="bg-black text-white px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                      // className=" px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                      className='disabled:opacity-50 disabled:cursor-not-allowed icon-font'
                       disabled={!currentDevice}
                     >
-                      刷新列表
+                      󰀢
                     </button>
                   </div>
                   <div className="space-y-4">
                     {watchfaces.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
-                        <Icon name="clock" className="text-4xl mb-4 mx-auto opacity-50" />
+                        <Icon name="clock" className="text-4xl margin-bottom-lg mx-auto opacity-50" />
                         <p>未连接到设备或没有表盘数据</p>
                       </div>
                     ) : (
                       watchfaces.map(wf => (
-                        <div key={wf.id} className="border border-black p-4">
+                        <div key={wf.id} className="">
                           <div className="flex-between">
                             <div>
                               <h4 className="font-bold">{wf.name}</h4>
@@ -1686,13 +1710,13 @@ function App() {
                             </div>
                             <div className="flex space-x-2">
                               {wf.isCurrent ? (
-                                <span className="bg-black text-white px-3 py-1 text-sm font-bold">
+                                <span className=" px-3 py-1 text-sm font-bold">
                                   当前使用
                                 </span>
                               ) : (
                                 <button 
                                   onClick={() => setCurrentWatchface(wf.id, wf.name)}
-                                  className="bg-black text-white px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
+                                  className=" px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
                                 >
                                   设为当前
                                 </button>
@@ -1700,7 +1724,7 @@ function App() {
                               {!wf.isCurrent && (
                                 <button 
                                   onClick={() => uninstallWatchface(wf.id, wf.name)}
-                                  className="bg-black text-white px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
+                                  className=" px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
                                 >
                                   卸载
                                 </button>
@@ -1717,25 +1741,26 @@ function App() {
               {/* 应用管理 */}
               {activeTab === 'apps' && (
                 <div>
-                  <div className="flex-between mb-6">
+                  <div className="flex-between margin-bottom-bg">
                     <h3 className="text-lg font-bold">应用列表</h3>
                     <button 
                       onClick={loadApps}
-                      className="bg-black text-white px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                      // className=" px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                      className='disabled:opacity-50 disabled:cursor-not-allowed icon-font'
                       disabled={!currentDevice}
                     >
-                      刷新列表
+                      󰀢
                     </button>
                   </div>
                   <div className="space-y-4">
                     {apps.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
-                        <Icon name="mobile" className="text-4xl mb-4 mx-auto opacity-50" />
+                        <Icon name="mobile" className="text-4xl margin-bottom-lg mx-auto opacity-50" />
                         <p>未连接到设备或没有应用数据</p>
                       </div>
                     ) : (
                       apps.map(app => (
-                        <div key={app.packageName} className="border border-black p-4">
+                        <div key={app.packageName} className="">
                           <div className="flex-between">
                             <div>
                               <h4 className="font-bold">{app.name}</h4>
@@ -1744,13 +1769,13 @@ function App() {
                             <div className="flex space-x-2">
                               <button 
                                 onClick={() => launchApp(app.packageName, app.name)}
-                                className="bg-black text-white px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
+                                className=" px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
                               >
                                 启动
                               </button>
                               <button 
                                 onClick={() => uninstallApp(app.packageName, app.name)}
-                                className="bg-black text-white px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
+                                className=" px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
                               >
                                 删除
                               </button>
@@ -1766,10 +1791,10 @@ function App() {
               {/* 文件安装 */}
               {activeTab === 'install' && (
                 <div>
-                  <h3 className="text-lg font-bold mb-6">文件安装</h3>
+                  <h3 className="text-lg font-bold margin-bottom-lg">文件安装</h3>
                   
                   {/* 「选择文件」按钮 */}
-                  <div className="mb-6">
+                  <div className="margin-bottom-lg">
                     <button 
                       onClick={() => document.getElementById('fileInput')?.click()}
                       className="btn-file-select"
@@ -1787,7 +1812,7 @@ function App() {
                   </div>
 
                   {selectedFile && (
-                    <div className="border border-black p-4 mb-6">
+                    <div className=" margin-bottom-lg">
                       <div className="flex-between">
                         <div>
                           <p className="font-bold">{selectedFile.name}</p>
@@ -1805,16 +1830,15 @@ function App() {
                   )}
 
                   {/* 「安装类型」模块 */}
-                  <div className="install-type-dropdown mb-6">
+                  <div className="install-type-dropdown margin-bottom-lg">
                     <div className="dropdown-header">
                       <h3 className="dropdown-title">安装类型</h3>
-                      <span className="dropdown-arrow">▼</span>
                     </div>
                     <div className="mt-4">
                       <select 
                         value={resType}
                         onChange={(e) => setResType(Number(e.target.value))}
-                        className="w-full border border-black p-3 bg-white text-black"
+                        className="w-full  p-3 bg-white text-black"
                       >
                         <option value="0">自动检测</option>
                         <option value="16">表盘文件</option>
@@ -1825,7 +1849,7 @@ function App() {
                   </div>
 
                   {installProgress > 0 && (
-                    <div className="mb-6">
+                    <div className="margin-bottom-lg">
                       <div className="flex-between mb-2">
                         <span className="font-bold">安装进度</span>
                         <span className="font-bold">{installProgress}%</span>
@@ -1843,7 +1867,7 @@ function App() {
                   <button 
                     onClick={installFile}
                     disabled={!selectedFile || !currentDevice}
-                    className="w-full bg-black text-white p-4 text-center text-lg font-bold cursor-pointer transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     开始安装
                   </button>
@@ -1852,17 +1876,19 @@ function App() {
             </div>
 
             {/* 操作日志区域 */}
-            <div className="border border-black mt-8">
-              <div className="flex-between p-4 border-b border-black">
+            <div className="log-container">
+              <div className="flex-between p-4">
                 <h3 className="font-bold">操作日志</h3>
                 <button 
                   onClick={clearLogs}
-                  className="text-sm font-bold cursor-pointer hover:opacity-70"
+                  className="text-sm cursor-pointer hover:opacity-70 icon-font"
                 >
-                  清空日志
+                  󰀗
                 </button>
               </div>
-              <div className="p-4 max-h-64 overflow-y-auto">
+              <div 
+                className="p-4 max-h-64 overflow-y-auto log-output"
+              >
                 {logs.map((log, index) => (
                   <div key={index} className="py-2 border-b border-gray-200 last:border-b-0">
                     {log}
@@ -1874,14 +1900,14 @@ function App() {
         ) : activeNav === 'about' ? (
           <div className="main-content">
             {/* 关于页面内容 */}
-            <div className="border border-black p-8">
-              <h2 className="text-3xl font-bold mb-6">关于 BandBurg</h2>
+            <div className="info-bar">
+              <h2 className="text-3xl font-bold margin-bottom-lg">关于 BandBurg</h2>
               
               <div className="space-y-8">
                 <div>
                   <h3 className="text-xl font-bold mb-3">项目介绍</h3>
                   <p className="leading-relaxed">
-                    BandBurg 是一个基于 WebAssembly (WASM) 的现代化 Web 界面，用于管理小米手环系列设备。
+                    BandBurg 是一个基于 WebAssembly (WASM) 的现代化 Web 界面，用于管理 Vela 设备系列设备。
                     通过浏览器即可连接、配置和安装表盘/应用到您的手环设备，无需安装任何额外软件。
                     本项目由 ASTROBOX 提供技术支持。
                   </p>
@@ -1902,7 +1928,7 @@ function App() {
                 <div>
                   <h3 className="text-xl font-bold mb-3">技术栈</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="border border-black p-4">
+                    <div className="">
                       <h4 className="font-bold mb-2">前端</h4>
                       <ul className="text-sm space-y-1">
                         <li>React 18 + TypeScript</li>
@@ -1911,13 +1937,13 @@ function App() {
                         <li>WebAssembly (Rust 编译)</li>
                       </ul>
                     </div>
-                    <div className="border border-black p-4">
+                    <div className="">
                       <h4 className="font-bold mb-2">通信协议</h4>
                       <ul className="text-sm space-y-1">
                         <li>Web Bluetooth API</li>
                         <li>WebAssembly</li>
                         <li>SPP / BLE 连接</li>
-                        <li>小米手环通信协议</li>
+                        <li>Vela 设备通信协议</li>
                       </ul>
                     </div>
                   </div>
@@ -1936,7 +1962,7 @@ function App() {
                 
                 <div>
                   <h3 className="text-xl font-bold mb-3">版本信息</h3>
-                  <div className="border border-black p-4">
+                  <div className="">
                     <div className="flex-between mb-2">
                       <span className="font-bold">当前版本</span>
                       <span className="font-bold">v1.0.1</span>
@@ -1967,14 +1993,14 @@ function App() {
         ) : (
           <div className="main-content">
             {/* Script页面 - JS代码编辑器和执行环境 */}
-            <div className="border border-black p-8">
-              <div className="flex justify-between items-center mb-6">
+            <div className="info-bar">
+              <div className="flex justify-between items-center margin-bottom-lg">
                 <h2 className="text-3xl font-bold">Script 脚本执行</h2>
                 <button 
                   onClick={() => {
                     setShowScriptMarket(true)
                   }}
-                  className="border border-black bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                  className=" bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
                 >
                   Script市场
                 </button>
@@ -1983,12 +2009,12 @@ function App() {
               <div className="space-y-8">
                 {showScriptMarket && (
                   // Script市场页面
-                  <div className="border border-black p-6 mb-6">
-                    <div className="flex justify-between items-center mb-6">
+                  <div className="  margin-bottom-lg">
+                    <div className="flex justify-between items-center margin-bottom-lg">
                       <h3 className="text-2xl font-bold">Script市场</h3>
                       <button
                         onClick={() => setShowScriptMarket(false)}
-                        className="border border-black bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                        className=" bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
                       >
                         返回编辑器
                       </button>
@@ -2003,7 +2029,7 @@ function App() {
                         <p>点击按钮加载脚本列表</p>
                         <button
                           onClick={fetchMarketScripts}
-                          className="mt-4 border border-black bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                          className="mt-4  bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
                         >
                           加载脚本列表
                         </button>
@@ -2011,7 +2037,7 @@ function App() {
                     ) : (
                       <div className="space-y-4">
                         {marketScripts.map((script, index) => (
-                          <div key={index} className="border border-black p-4">
+                          <div key={index} className="">
                             <div className="flex justify-between items-start">
                               <div>
                                 <h4 className="text-xl font-bold">{script.name}</h4>
@@ -2022,7 +2048,7 @@ function App() {
                               </div>
                               <button
                                 onClick={() => installMarketScript(script)}
-                                className="border border-black bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                                className=" bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
                               >
                                 安装
                               </button>
@@ -2038,13 +2064,13 @@ function App() {
                   <h3 className="text-xl font-bold mb-3">脚本编辑器</h3>
                   
                   {/* 程序管理工具栏 */}
-                  <div className="border border-black p-4 mb-4">
-                    <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <div className=" margin-bottom-lg">
+                    <div className="flex flex-wrap items-center gap-3 margin-bottom-lg">
                       <div className="flex-1 min-w-[200px]">
                         <div className="text-sm font-bold mb-1">程序管理</div>
                         <div className="flex items-center gap-2">
                           <select 
-                            className="flex-1 border border-black p-2 bg-white text-black"
+                            className="flex-1  p-2 bg-white text-black"
                             value={selectedScriptId}
                             onChange={(e) => {
                               const scriptId = e.target.value
@@ -2101,9 +2127,9 @@ function App() {
                               
                               setLogs(prev => [...prev, `✅ 程序 "${name}" 已保存`])
                             }}
-                            className="border border-black bg-white text-black px-3 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                            className=" bg-white text-black px-3 py-2 cursor-pointer transition-opacity hover:opacity-90 icon-font"
                           >
-                            保存
+                            󰀕
                           </button>
                           
                           <button 
@@ -2127,10 +2153,10 @@ function App() {
                                 setLogs(prev => [...prev, '✅ 程序已删除'])
                               }
                             }}
-                            className="border border-black bg-white text-black px-3 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                            className=" bg-white text-black px-3 py-2 cursor-pointer transition-opacity hover:opacity-90 icon-font"
                             disabled={!selectedScriptId}
                           >
-                            删除
+                            󰀗
                           </button>
                           
                           <button 
@@ -2160,9 +2186,9 @@ function App() {
                               input.click()
                               document.body.removeChild(input)
                             }}
-                            className="border border-black bg-white text-black px-3 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                            className=" bg-white text-black px-3 py-2 cursor-pointer transition-opacity hover:opacity-90 icon-font"
                           >
-                            导入文件
+                            󰁮
                           </button>
                           
                           <button 
@@ -2171,9 +2197,9 @@ function App() {
                               editor.value = ''
                               setSelectedScriptId('')
                             }}
-                            className="border border-black bg-white text-black px-3 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                            className=" bg-white text-black px-3 py-2 cursor-pointer transition-opacity hover:opacity-90 icon-font"
                           >
-                            新建
+                            󰁿
                           </button>
 
                         </div>
@@ -2181,8 +2207,8 @@ function App() {
                     </div>
                   </div>
                   
-                  <div className="border border-black p-4 mb-4">
-                    <div className="flex-between mb-4">
+                  <div className=" margin-bottom-lg">
+                    <div className="flex-between margin-bottom-lg">
                       <div>
                         <h4 className="font-bold">JavaScript 代码</h4>
                         <p className="text-sm text-gray-500">支持使用 WASM 接口与设备交互</p>
@@ -2746,7 +2772,7 @@ function App() {
                               console.error('脚本执行失败:', error)
                             }
                           }}
-                          className="bg-black text-white px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                          className=" px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
                         >
                           执行脚本
                         </button>
@@ -2755,7 +2781,7 @@ function App() {
                             const editor = document.getElementById('scriptEditor') as HTMLTextAreaElement
                             editor.value = ''
                           }}
-                          className="border-2 border-black bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
+                          className=" bg-white text-black px-4 py-2 font-bold cursor-pointer transition-opacity hover:opacity-90"
                         >
                           清空
                         </button>
@@ -2764,7 +2790,7 @@ function App() {
                     
                     <textarea 
                       id="scriptEditor"
-                      className="w-full h-64 border border-black p-4 font-mono text-sm bg-white text-black"
+                      className="w-full h-64  font-mono text-sm bg-white text-black"
                       placeholder="// 在这里编写 JavaScript 代码
 // 可以使用 sandbox.wasm.* 访问 WASM 接口
 // 例如：sandbox.wasm.thirdpartyapp_send_message('设备地址', '包名', '消息内容')"
@@ -2805,7 +2831,7 @@ sendMessageToApp()`}
                 <div>
                   <h3 className="text-xl font-bold mb-3">可用接口</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="border border-black p-4">
+                    <div className="">
                       <h4 className="font-bold mb-2">设备连接</h4>
                       <ul className="text-sm space-y-1">
                         <li><code>sandbox.wasm.miwear_connect()</code> - 连接设备</li>
@@ -2814,7 +2840,7 @@ sendMessageToApp()`}
                         <li><code>sandbox.wasm.miwear_get_data()</code> - 获取设备数据</li>
                       </ul>
                     </div>
-                    <div className="border border-black p-4">
+                    <div className="">
                       <h4 className="font-bold mb-2">第三方应用</h4>
                       <ul className="text-sm space-y-1">
                         <li><code>sandbox.wasm.thirdpartyapp_get_list()</code> - 获取应用列表</li>
@@ -2823,7 +2849,7 @@ sendMessageToApp()`}
                         <li><code>sandbox.wasm.thirdpartyapp_uninstall()</code> - 卸载应用</li>
                       </ul>
                     </div>
-                    <div className="border border-black p-4">
+                    <div className="">
                       <h4 className="font-bold mb-2">表盘管理</h4>
                       <ul className="text-sm space-y-1">
                         <li><code>sandbox.wasm.watchface_get_list()</code> - 获取表盘列表</li>
@@ -2831,7 +2857,7 @@ sendMessageToApp()`}
                         <li><code>sandbox.wasm.watchface_uninstall()</code> - 卸载表盘</li>
                       </ul>
                     </div>
-                    <div className="border border-black p-4">
+                    <div className="">
                       <h4 className="font-bold mb-2">事件和工具</h4>
                       <ul className="text-sm space-y-1">
                         <li><code>sandbox.wasm.register_event_sink(callback)</code> - 注册事件监听器，接收所有 WASM 事件</li>
@@ -2963,36 +2989,36 @@ sandbox.log('事件监听器已注册');
                   </div>
                 </div>
                 
-                <div className="border-t border-black pt-6 mb-6">
+                <div className="border-t border-black pt-6 margin-bottom-lg">
                   <h3 className="text-xl font-bold mb-3">GUI 功能详细文档</h3>
                   <div className="space-y-4">
-                    <div className="border border-black p-4">
+                    <div className="">
                       <h4 className="font-bold mb-2">sandbox.gui(config)</h4>
                       <p className="text-sm mb-3">创建一个模态GUI窗口，支持多种表单元素和事件监听。</p>
                       
                       <h5 className="font-bold mb-2 mt-4">配置参数 (config)</h5>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-sm border-collapse border border-black">
+                        <table className="w-full text-sm border-collapse ">
                           <thead>
                             <tr className="bg-gray-100">
-                              <th className="border border-black p-2">属性</th>
-                              <th className="border border-black p-2">类型</th>
-                              <th className="border border-black p-2">必填</th>
-                              <th className="border border-black p-2">说明</th>
+                              <th className=" p-2">属性</th>
+                              <th className=" p-2">类型</th>
+                              <th className=" p-2">必填</th>
+                              <th className=" p-2">说明</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr>
-                              <td className="border border-black p-2 font-mono">title</td>
-                              <td className="border border-black p-2">string</td>
-                              <td className="border border-black p-2">否</td>
-                              <td className="border border-black p-2">GUI窗口标题</td>
+                              <td className=" p-2 font-mono">title</td>
+                              <td className=" p-2">string</td>
+                              <td className=" p-2">否</td>
+                              <td className=" p-2">GUI窗口标题</td>
                             </tr>
                             <tr>
-                              <td className="border border-black p-2 font-mono">elements</td>
-                              <td className="border border-black p-2">Array</td>
-                              <td className="border border-black p-2">是</td>
-                              <td className="border border-black p-2">元素配置数组，按顺序渲染</td>
+                              <td className=" p-2 font-mono">elements</td>
+                              <td className=" p-2">Array</td>
+                              <td className=" p-2">是</td>
+                              <td className=" p-2">元素配置数组，按顺序渲染</td>
                             </tr>
                           </tbody>
                         </table>
@@ -3000,44 +3026,44 @@ sandbox.log('事件监听器已注册');
                       
                       <h5 className="font-bold mb-2 mt-4">元素类型 (element)</h5>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-sm border-collapse border border-black">
+                        <table className="w-full text-sm border-collapse ">
                           <thead>
                             <tr className="bg-gray-100">
-                              <th className="border border-black p-2">type</th>
-                              <th className="border border-black p-2">支持属性</th>
-                              <th className="border border-black p-2">说明</th>
+                              <th className=" p-2">type</th>
+                              <th className=" p-2">支持属性</th>
+                              <th className=" p-2">说明</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr>
-                              <td className="border border-black p-2 font-mono">label</td>
-                              <td className="border border-black p-2">text (string)</td>
-                              <td className="border border-black p-2">显示文本标签</td>
+                              <td className=" p-2 font-mono">label</td>
+                              <td className=" p-2">text (string)</td>
+                              <td className=" p-2">显示文本标签</td>
                             </tr>
                             <tr>
-                              <td className="border border-black p-2 font-mono">input</td>
-                              <td className="border border-black p-2">id, label, placeholder, value</td>
-                              <td className="border border-black p-2">文本输入框，支持 change 事件</td>
+                              <td className=" p-2 font-mono">input</td>
+                              <td className=" p-2">id, label, placeholder, value</td>
+                              <td className=" p-2">文本输入框，支持 change 事件</td>
                             </tr>
                             <tr>
-                              <td className="border border-black p-2 font-mono">textarea</td>
-                              <td className="border border-black p-2">id, label, placeholder, value</td>
-                              <td className="border border-black p-2">多行文本输入，支持 change 事件</td>
+                              <td className=" p-2 font-mono">textarea</td>
+                              <td className=" p-2">id, label, placeholder, value</td>
+                              <td className=" p-2">多行文本输入，支持 change 事件</td>
                             </tr>
                             <tr>
-                              <td className="border border-black p-2 font-mono">select</td>
-                              <td className="border border-black p-2">id, label, {'options[{value, label, selected}]'}</td>
-                              <td className="border border-black p-2">下拉选择框，支持 change 事件</td>
+                              <td className=" p-2 font-mono">select</td>
+                              <td className=" p-2">id, label, {'options[{value, label, selected}]'}</td>
+                              <td className=" p-2">下拉选择框，支持 change 事件</td>
                             </tr>
                             <tr>
-                              <td className="border border-black p-2 font-mono">button</td>
-                              <td className="border border-black p-2">id, text</td>
-                              <td className="border border-black p-2">按钮，支持 click 事件</td>
+                              <td className=" p-2 font-mono">button</td>
+                              <td className=" p-2">id, text</td>
+                              <td className=" p-2">按钮，支持 click 事件</td>
                             </tr>
                             <tr>
-                              <td className="border border-black p-2 font-mono">file</td>
-                              <td className="border border-black p-2">id, label, accept</td>
-                              <td className="border border-black p-2">文件选择，支持 change 事件</td>
+                              <td className=" p-2 font-mono">file</td>
+                              <td className=" p-2">id, label, accept</td>
+                              <td className=" p-2">文件选择，支持 change 事件</td>
                             </tr>
                           </tbody>
                         </table>
@@ -3045,57 +3071,57 @@ sandbox.log('事件监听器已注册');
                       
                       <h5 className="font-bold mb-2 mt-4">返回值对象</h5>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-sm border-collapse border border-black">
+                        <table className="w-full text-sm border-collapse ">
                           <thead>
                             <tr className="bg-gray-100">
-                              <th className="border border-black p-2">方法</th>
-                              <th className="border border-black p-2">参数</th>
-                              <th className="border border-black p-2">返回值</th>
-                              <th className="border border-black p-2">说明</th>
+                              <th className=" p-2">方法</th>
+                              <th className=" p-2">参数</th>
+                              <th className=" p-2">返回值</th>
+                              <th className=" p-2">说明</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr>
-                              <td className="border border-black p-2 font-mono">getValues()</td>
-                              <td className="border border-black p-2">无</td>
-                              <td className="border border-black p-2">Object</td>
-                              <td className="border border-black p-2">获取所有输入元素的当前值</td>
+                              <td className=" p-2 font-mono">getValues()</td>
+                              <td className=" p-2">无</td>
+                              <td className=" p-2">Object</td>
+                              <td className=" p-2">获取所有输入元素的当前值</td>
                             </tr>
                             <tr>
-                              <td className="border border-black p-2 font-mono">getValue(id)</td>
-                              <td className="border border-black p-2">id (string)</td>
-                              <td className="border border-black p-2">any</td>
-                              <td className="border border-black p-2">获取指定ID元素的值</td>
+                              <td className=" p-2 font-mono">getValue(id)</td>
+                              <td className=" p-2">id (string)</td>
+                              <td className=" p-2">any</td>
+                              <td className=" p-2">获取指定ID元素的值</td>
                             </tr>
                             <tr>
-                              <td className="border border-black p-2 font-mono">setValue(id, value)</td>
-                              <td className="border border-black p-2">id (string), value (any)</td>
-                              <td className="border border-black p-2">void</td>
-                              <td className="border border-black p-2">设置指定ID元素的值（文件输入除外）</td>
+                              <td className=" p-2 font-mono">setValue(id, value)</td>
+                              <td className=" p-2">id (string), value (any)</td>
+                              <td className=" p-2">void</td>
+                              <td className=" p-2">设置指定ID元素的值（文件输入除外）</td>
                             </tr>
                             <tr>
-                              <td className="border border-black p-2 font-mono">on(event, id, callback)</td>
-                              <td className="border border-black p-2">event (string), id (string), callback (Function)</td>
-                              <td className="border border-black p-2">void</td>
-                              <td className="border border-black p-2">监听元素事件。事件格式：<br/>• button:click<br/>• input:change<br/>• file:change</td>
+                              <td className=" p-2 font-mono">on(event, id, callback)</td>
+                              <td className=" p-2">event (string), id (string), callback (Function)</td>
+                              <td className=" p-2">void</td>
+                              <td className=" p-2">监听元素事件。事件格式：<br/>• button:click<br/>• input:change<br/>• file:change</td>
                             </tr>
                             <tr>
-                              <td className="border border-black p-2 font-mono">close()</td>
-                              <td className="border border-black p-2">无</td>
-                              <td className="border border-black p-2">void</td>
-                              <td className="border border-black p-2">关闭GUI窗口</td>
+                              <td className=" p-2 font-mono">close()</td>
+                              <td className=" p-2">无</td>
+                              <td className=" p-2">void</td>
+                              <td className=" p-2">关闭GUI窗口</td>
                             </tr>
                             <tr>
-                              <td className="border border-black p-2 font-mono">show()</td>
-                              <td className="border border-black p-2">无</td>
-                              <td className="border border-black p-2">void</td>
-                              <td className="border border-black p-2">显示GUI窗口</td>
+                              <td className=" p-2 font-mono">show()</td>
+                              <td className=" p-2">无</td>
+                              <td className=" p-2">void</td>
+                              <td className=" p-2">显示GUI窗口</td>
                             </tr>
                             <tr>
-                              <td className="border border-black p-2 font-mono">hide()</td>
-                              <td className="border border-black p-2">无</td>
-                              <td className="border border-black p-2">void</td>
-                              <td className="border border-black p-2">隐藏GUI窗口</td>
+                              <td className=" p-2 font-mono">hide()</td>
+                              <td className=" p-2">无</td>
+                              <td className=" p-2">void</td>
+                              <td className=" p-2">隐藏GUI窗口</td>
                             </tr>
                           </tbody>
                         </table>
@@ -3128,7 +3154,7 @@ const currentValues = gui.getValues()`}
                 <div>
                   <h3 className="text-xl font-bold mb-3">示例脚本</h3>
                   <div className="space-y-4">
-                    <div className="border border-black p-4">
+                    <div className="">
                       <h4 className="font-bold mb-2">示例1：监听第三方应用消息</h4>
                       <pre className="text-sm bg-gray-50 p-3 overflow-x-auto">
 {`// 监听第三方应用消息
@@ -3154,13 +3180,13 @@ sandbox.wasm.register_event_sink((event) => {
 
 sandbox.log('✅ 事件监听器已注册，等待应用消息...')`
                         }}
-                        className="mt-2 border border-black bg-white text-black px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
+                        className="mt-2  bg-white text-black px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
                       >
                         加载此示例
                       </button>
                     </div>
                     
-                    <div className="border border-black p-4">
+                    <div className="">
                       <h4 className="font-bold mb-2">示例2：批量发送消息</h4>
                       <pre className="text-sm bg-gray-50 p-3 overflow-x-auto">
 {`// 批量发送消息到多个应用
@@ -3226,13 +3252,13 @@ async function batchSendMessages() {
 // 执行函数
 batchSendMessages()`
                         }}
-                        className="mt-2 border border-black bg-white text-black px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
+                        className="mt-2  bg-white text-black px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
                       >
                         加载此示例
                       </button>
                     </div>
                     
-                    <div className="border border-black p-4">
+                    <div className="">
                       <h4 className="font-bold mb-2">示例3：设备数据监控</h4>
                       <pre className="text-sm bg-gray-50 p-3 overflow-x-auto">
 {`// 定期获取设备数据
@@ -3318,13 +3344,13 @@ async function monitorDeviceData() {
 // 执行函数
 monitorDeviceData()`
                         }}
-                        className="mt-2 border border-black bg-white text-black px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
+                        className="mt-2  bg-white text-black px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
                       >
                         加载此示例
                       </button>
                     </div>
                     
-                    <div className="border border-black p-4">
+                    <div className="">
                       <h4 className="font-bold mb-2">示例4：GUI界面创建</h4>
                       <pre className="text-sm bg-gray-50 p-3 overflow-x-auto">
 {`// 创建GUI界面
@@ -3472,7 +3498,7 @@ gui.on('file:change', 'fileInput', (file) => {
 
 sandbox.log('✅ GUI界面已创建，请与界面交互')`
                         }}
-                        className="mt-2 border border-black bg-white text-black px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
+                        className="mt-2  bg-white text-black px-3 py-1 text-sm font-bold cursor-pointer transition-opacity hover:opacity-90"
                       >
                         加载此示例
                       </button>
@@ -3501,10 +3527,10 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
 
       {/* 添加/编辑设备表单弹窗 */}
       {showDeviceForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex-between mb-6">
-              <h2 className="text-2xl font-bold">添加新设备</h2>
+        <div className="fixed inset-0 z-30 overlay-container">
+          <div className="overlay">
+            <div className="flex-between margin-bottom-lg overlay-title">
+              <h2 className="text-white">添加新设备</h2>
               <button 
                 onClick={() => {
                   setShowDeviceForm(false);
@@ -3516,65 +3542,65 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
                     connectType: 'SPP'
                   });
                 }}
-                className="text-2xl font-bold cursor-pointer hover:opacity-70"
+                className="text-white"
               >
                 ×
               </button>
             </div>
+
+            <div className="overlay-content"> 
             
             {/* 模式选择 */}
-            <div className="mb-8">
-              <div className="flex border border-black mb-6">
+            <div className="tab-container">
                 <button
                   onClick={() => setDeviceFormMode('direct')}
-                  className={`flex-1 py-3 text-center font-bold ${deviceFormMode === 'direct' ? 'bg-black text-white' : 'bg-white text-black'}`}
+                  className={`tab-item ${deviceFormMode === 'direct' ? 'tab-selected' : 'tab-unselected'}`}
                 >
                   直接添加
                 </button>
                 <button
                   onClick={() => setDeviceFormMode('scan')}
-                  className={`flex-1 py-3 text-center font-bold ${deviceFormMode === 'scan' ? 'bg-black text-white' : 'bg-white text-black'}`}
+                  className={`tab-item ${deviceFormMode === 'scan' ? 'tab-selected' : 'tab-unselected'}`}
                 >
                   扫描附近设备
                 </button>
-              </div>
             </div>
             
             {deviceFormMode === 'direct' ? (
               /* 直接添加模式表单 */
               <div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="info-bar grid grid-cols-1 md:grid-cols-2 gap-6" style={{ paddingBottom: '6px' }}>
                   <div>
-                    <div className="mb-4">
+                    <div className="margin-bottom-lg">
                       <label className="block text-sm font-bold mb-2">设备名称 *</label>
                       <input 
                         type="text" 
                         value={deviceForm.name}
                         onChange={(e) => setDeviceForm({...deviceForm, name: e.target.value})}
                         placeholder="例如：Mi Band 7"
-                        className="w-full border border-black p-3 bg-white text-black"
+                        className="w-full  p-3 bg-white text-black"
                       />
                     </div>
-                    <div className="mb-4">
+                    <div className="margin-bottom-lg">
                       <label className="block text-sm font-bold mb-2">设备地址 *</label>
                       <input 
                         type="text" 
                         value={deviceForm.addr}
                         onChange={(e) => setDeviceForm({...deviceForm, addr: e.target.value})}
                         placeholder="例如：XX:XX:XX:XX:XX:XX"
-                        className="w-full border border-black p-3 bg-white text-black"
+                        className="w-full  p-3 bg-white text-black"
                       />
                     </div>
                   </div>
                   <div>
-                    <div className="mb-4">
+                    <div className="margin-bottom-lg">
                       <label className="block text-sm font-bold mb-2">认证密钥 *</label>
                       <input 
                         type="text" 
                         value={deviceForm.authkey}
                         onChange={(e) => setDeviceForm({...deviceForm, authkey: e.target.value})}
                         placeholder="16字节认证密钥"
-                        className="w-full border border-black p-3 bg-white text-black"
+                        className="w-full  p-3 bg-white text-black"
                       />
                     </div>
                     <div className="flex space-x-4">
@@ -3583,7 +3609,7 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
                         <select 
                           value={deviceForm.sarVersion}
                           onChange={(e) => setDeviceForm({...deviceForm, sarVersion: parseInt(e.target.value)})}
-                          className="w-full border border-black p-3 bg-white text-black"
+                          className="w-full  p-3 bg-white text-black"
                         >
                           <option value={2}>SAR v2</option>
                           <option value={1}>SAR v1</option>
@@ -3594,7 +3620,7 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
                         <select 
                           value={deviceForm.connectType}
                           onChange={(e) => setDeviceForm({...deviceForm, connectType: e.target.value})}
-                          className="w-full border border-black p-3 bg-white text-black"
+                          className="w-full  p-3 bg-white text-black"
                         >
                           <option value="SPP">SPP</option>
                           <option value="BLE">BLE</option>
@@ -3604,10 +3630,10 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
                   </div>
                 </div>
                 
-                <div className="flex space-x-4 mt-8">
+                <div className="flex overlay-actions" style={{ gap: '10px' }}>
                   <button 
                     onClick={saveDevice} 
-                    className="flex-1 bg-black text-white p-4 text-center font-bold cursor-pointer transition-opacity hover:opacity-90"
+                    className="flex-1  p-4 text-center font-bold cursor-pointer transition-opacity hover:opacity-90"
                   >
                     保存设备
                   </button>
@@ -3622,7 +3648,7 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
                         connectType: 'SPP'
                       });
                     }}
-                    className="flex-1 border-2 border-black bg-white text-black p-4 text-center font-bold cursor-pointer transition-opacity hover:opacity-90"
+                    className="flex-1  bg-white text-black p-4 text-center font-bold cursor-pointer transition-opacity hover:opacity-90"
                   >
                     取消
                   </button>
@@ -3631,11 +3657,12 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
             ) : (
               /* 扫描附近设备模式 */
               <div>
-                <div className="mb-6">
+                <div className="info-bar margin-bottom-lg">
                   <button 
                     onClick={scanDevices}
-                    className="w-full bg-black text-white p-4 text-center text-lg font-bold cursor-pointer transition-opacity hover:opacity-90"
+                    className="w-full"
                   >
+                    <span className="icon-font" style={{fontSize:"unset", marginRight:"5px"}}>󰀠</span>
                     扫描附近设备
                   </button>
                   <p className="text-sm text-gray-500 mt-2 text-center">
@@ -3644,38 +3671,38 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
                 </div>
                 
                 {deviceForm.name && deviceForm.addr && (
-                  <div className="border border-black p-6 mb-6">
-                    <h3 className="text-lg font-bold mb-4">已扫描到设备</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div >
+                    <h3 className="text-lg font-bold margin-bottom-lg">已扫描到设备</h3>
+                    <div className="info-bar grid grid-cols-1 md:grid-cols-2 gap-6" style={{ paddingBottom: '6px' }}>
                       <div>
-                        <div className="mb-4">
+                        <div className="margin-bottom-lg">
                           <label className="block text-sm font-bold mb-2">设备名称</label>
                           <input 
                             type="text" 
                             value={deviceForm.name}
                             onChange={(e) => setDeviceForm({...deviceForm, name: e.target.value})}
-                            className="w-full border border-black p-3 bg-white text-black"
+                            className="w-full  p-3 bg-white text-black"
                           />
                         </div>
-                        <div className="mb-4">
+                        <div className="margin-bottom-lg">
                           <label className="block text-sm font-bold mb-2">设备地址</label>
                           <input 
                             type="text" 
                             value={deviceForm.addr}
                             onChange={(e) => setDeviceForm({...deviceForm, addr: e.target.value})}
-                            className="w-full border border-black p-3 bg-white text-black"
+                            className="w-full  p-3 bg-white text-black"
                           />
                         </div>
                       </div>
                       <div>
-                        <div className="mb-4">
+                        <div className="margin-bottom-lg">
                           <label className="block text-sm font-bold mb-2">认证密钥 *</label>
                           <input 
                             type="text" 
                             value={deviceForm.authkey}
                             onChange={(e) => setDeviceForm({...deviceForm, authkey: e.target.value})}
                             placeholder="请输入设备的16字节认证密钥"
-                            className="w-full border border-black p-3 bg-white text-black"
+                            className="w-full  p-3 bg-white text-black"
                           />
                         </div>
                         <div className="flex space-x-4">
@@ -3684,7 +3711,7 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
                             <select 
                               value={deviceForm.sarVersion}
                               onChange={(e) => setDeviceForm({...deviceForm, sarVersion: parseInt(e.target.value)})}
-                              className="w-full border border-black p-3 bg-white text-black"
+                              className="w-full  p-3 bg-white text-black"
                             >
                               <option value={2}>SAR v2</option>
                               <option value={1}>SAR v1</option>
@@ -3695,7 +3722,7 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
                             <select 
                               value={deviceForm.connectType}
                               onChange={(e) => setDeviceForm({...deviceForm, connectType: e.target.value})}
-                              className="w-full border border-black p-3 bg-white text-black"
+                              className="w-full  p-3 bg-white text-black"
                             >
                               <option value="SPP">SPP</option>
                               <option value="BLE">BLE</option>
@@ -3705,10 +3732,10 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
                       </div>
                     </div>
                     
-                    <div className="flex space-x-4 mt-8">
+                    <div className="flex overlay-actions" style={{ gap: '10px' }}>
                       <button 
                         onClick={saveDevice} 
-                        className="flex-1 bg-black text-white p-4 text-center font-bold cursor-pointer transition-opacity hover:opacity-90"
+                        className="flex-1  p-4 text-center font-bold cursor-pointer transition-opacity hover:opacity-90"
                       >
                         保存设备
                       </button>
@@ -3722,7 +3749,7 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
                             connectType: 'SPP'
                           });
                         }}
-                        className="flex-1 border-2 border-black bg-white text-black p-4 text-center font-bold cursor-pointer transition-opacity hover:opacity-90"
+                        className="flex-1  bg-white text-black p-4 text-center font-bold cursor-pointer transition-opacity hover:opacity-90"
                       >
                         重新扫描
                       </button>
@@ -3738,9 +3765,14 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
                 )}
               </div>
             )}
+
+            </div>
           </div>
         </div>
       )}
+      <div className="flex page-container footer font-bold">
+        <img src="/astrobox.svg" style={{height: "14px"}}/>
+      </div>
     </div>
   )
 }

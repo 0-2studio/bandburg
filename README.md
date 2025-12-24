@@ -1,7 +1,7 @@
-# BandBurg - 小米手环现代化管理界面
+# BandBurg - Vela 设备现代化管理界面
 https://bandburg.0pen.top/
 
-基于 miband-web-install项目( https://github.com/0-2studio/miband-web-install ) 的黑白极简风格 Web 管理界面，用于连接和管理小米手环系列设备。
+基于 miband-web-install项目( https://github.com/0-2studio/miband-web-install ) 的黑白极简风格 Web 管理界面，用于连接和管理 Vela 设备系列设备。
 
 本项目由 ASTROBOX 提供技术支持。
 
@@ -206,7 +206,7 @@ npm run clean
 
 ### 使用限制
 1. **浏览器权限**：首次使用需要授予蓝牙访问权限
-2. **设备兼容性**：支持小米手环系列，具体型号取决于 WASM 模块
+2. **设备兼容性**：支持 Vela 设备系列，具体型号取决于 WASM 模块
 3. **网络环境**：建议在安全、可信的网络环境中使用
 4. **文件格式**：仅支持 `.bin` 和 `.rpk` 格式文件
 
@@ -254,4 +254,4 @@ A:
 
 ---
 
-**BandBurg** - 简洁、高效的小米手环管理工具
+**BandBurg** - 简洁、高效的 Vela 设备管理工具

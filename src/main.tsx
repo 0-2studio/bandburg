@@ -139,16 +139,16 @@ const BrowserNotSupported = ({ compatibilityResults }: { compatibilityResults: a
   const isMissingBoth = !webAssembly.supported && !webBluetooth.supported
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-6">
-      <div className="max-w-2xl w-full border-2 border-black p-8">
+    <div className="min-h-screen bg-white flex items-center justify-center ">
+      <div className="max-w-2xl w-full  p-8">
         <div className="flex items-center mb-8">
           <img src="/icon.png" alt="BandBurg Logo" className="w-12 h-12 mr-4" />
           <h1 className="text-3xl font-bold tracking-tight">BANDBURG</h1>
         </div>
         
-        <div className="border border-black p-6 mb-6">
-          <div className="flex items-center mb-4">
-            <div className="w-10 h-10 bg-black text-white flex items-center justify-center text-xl font-bold mr-3">
+        <div className="  margin-bottom-lg">
+          <div className="flex items-center margin-bottom-lg">
+            <div className="w-10 h-10  flex items-center justify-center text-xl font-bold mr-3">
               ⚠️
             </div>
             <h2 className="text-2xl font-bold">浏览器兼容性提示</h2>
@@ -174,7 +174,7 @@ const BrowserNotSupported = ({ compatibilityResults }: { compatibilityResults: a
                 {!webBluetooth.supported && (
                   <>
                     <li><strong>Web Bluetooth API</strong>: 设备发现</li>
-                    <li>没有 Web Bluetooth API，无法搜索附近小米手环</li>
+                    <li>没有 Web Bluetooth API，无法搜索附近 Vela 设备</li>
                   </>
                 )}
               </ul>
@@ -182,7 +182,7 @@ const BrowserNotSupported = ({ compatibilityResults }: { compatibilityResults: a
 
             {/* 详细错误信息 */}
             {(webAssembly.errors.length > 0 || webBluetooth.errors.length > 0) && (
-              <div className="border border-black p-4 mt-4">
+              <div className=" mt-4">
                 <h3 className="font-bold mb-2">详细检测结果</h3>
                 <div className="space-y-2 text-sm">
                   {webAssembly.errors.length > 0 && (
@@ -209,17 +209,17 @@ const BrowserNotSupported = ({ compatibilityResults }: { compatibilityResults: a
               </div>
             )}
             
-            <div className="border border-black p-4 mt-6">
+            <div className=" mt-6">
               <h3 className="text-xl font-bold mb-3">推荐解决方案</h3>
-              <p className="mb-4">
+              <p className="margin-bottom-lg">
                 建议使用以下完全兼容的浏览器：
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border border-black p-4">
+                <div className="">
                   <h4 className="font-bold mb-2">Google Chrome</h4>
                   <p className="text-sm mb-3">完全支持 WebAssembly 和 Web Bluetooth API</p>
                 </div>
-                <div className="border border-black p-4">
+                <div className="">
                   <h4 className="font-bold mb-2">Microsoft Edge</h4>
                   <p className="text-sm mb-3">基于 Chromium，完全兼容所有必要功能</p>
                 </div>
@@ -236,7 +236,7 @@ const BrowserNotSupported = ({ compatibilityResults }: { compatibilityResults: a
         <div className="text-center">
           <button 
             onClick={() => window.location.reload()}
-            className="border-2 border-black bg-white text-black px-6 py-3 font-bold hover:bg-black hover:text-white transition-colors mr-4"
+            className=" bg-white text-black px-6 py-3 font-bold hover:bg-black hover:text-white transition-colors mr-4"
           >
             重新检测
           </button>
@@ -253,7 +253,7 @@ const BrowserNotSupported = ({ compatibilityResults }: { compatibilityResults: a
                 )
               }
             }}
-            className="bg-black text-white px-6 py-3 font-bold hover:opacity-90 transition-opacity"
+            className=" px-6 py-3 font-bold hover:opacity-90 transition-opacity"
             disabled={isMissingBoth}
             title={isMissingBoth ? '缺失核心功能，无法继续使用' : '强制继续，功能可能受限'}
           >

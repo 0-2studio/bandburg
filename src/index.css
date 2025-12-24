@@ -19,8 +19,9 @@
 
   body {
     color: var(--black);
-    background-color: var(--white);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    background-color: #f2f2f2;
+    /* font-family: 'MiSymbolVF', 'MiSans Chinese', sans-serif; */
+    /* font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     margin: 0;
@@ -30,6 +31,42 @@
 
   * {
     box-sizing: border-box;
+  }
+
+  .page-container {
+    flex-direction: row;
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 10px;
+    margin: 0 auto;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 70px;
+  }
+
+  .footer {
+    justify-content: center;
+    padding: 16px 0 26px;
+    align-items: center;
+    gap: 7px;
+    opacity: 0.2;
+  }
+
+  .margin-bottom-lg {
+    margin-bottom: 10px;
+  }
+
+  .margin-bottom-bg {
+    margin-bottom: 16px;
+  }
+  
+  .shadow-lg {
+    box-shadow: 0 0 20px 3px hsl(0, 0%, 0%, .1) !important;
+  }
+
+  @font-face {
+    font-family: 'MiSymbolVF';
+    src: url('/fonts/misymbol_vf-Regular.woff2') format('woff2'),
   }
 }
 
@@ -41,19 +78,32 @@
 
   /* 侧边导航 */
   .sidebar {
-    @apply w-64 bg-white border-r border-gray-200 h-full;
+    @apply w-64 h-full;
+    display: none;
   }
 
   .nav-item {
-    @apply flex items-center px-6 py-4 text-base font-medium cursor-pointer border-l-4 border-transparent transition-colors;
+    @apply margin-bottom-lg;
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+    font-size: 15px;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    background: hsl(0, 0%, 0%, .05);
+    border-radius: 16px;
+    color: hsl(0, 0%, 0%, .4);
+    padding: 16px;
+    font-weight: 600;
   }
 
   .nav-item-selected {
-    @apply bg-black text-white border-l-black;
+    background: white;
+    color: hsl(0, 0%, 0%, .9);
   }
 
   .nav-item-unselected {
-    @apply bg-white text-black hover:bg-gray-100;
+    /* nth */
   }
 
   .nav-icon {
@@ -62,12 +112,19 @@
 
   /* 主内容区 */
   .main-content {
-    @apply flex-1 p-8 overflow-auto;
+    @apply flex-1 overflow-auto;
   }
 
   /* 信息栏 */
   .info-bar {
-    @apply bg-black text-white p-6 mb-6;
+    @apply margin-bottom-lg;
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(255, 255, 255);
+    border-radius: 16px;
+    border-top: none;
+    padding: 16px;
+    box-shadow: 0px 0px 24px 0px rgba(0, 0, 0, 0.01);
   }
 
   .info-title {
@@ -80,7 +137,7 @@
 
   /* 下拉区域 */
   .dropdown-section {
-    @apply border border-black bg-white p-4 mb-6;
+    @apply info-bar margin-bottom-lg;
   }
 
   .dropdown-header {
@@ -101,56 +158,257 @@
 
   /* 设备条目 */
   .device-item {
-    @apply bg-black text-white p-4 cursor-pointer transition-opacity hover:opacity-90;
+    @apply cursor-pointer transition-opacity hover:opacity-90;
   }
 
   .device-item-current {
-    @apply border-2 border-black bg-white text-black;
+    color: #007bff;
   }
 
   /* 按钮 */
   .btn-add-device {
-    @apply bg-black text-white p-4 w-full text-center font-bold cursor-pointer transition-opacity hover:opacity-90 mb-6;
+    @apply margin-bottom-lg;
+    width: 100%;
+    background: rgb(255, 255, 255);
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 15px !important;
+    height: auto;
+    border: none;
+    color: unset;
   }
 
   .btn-file-select {
-    @apply border-2 border-black bg-white text-black p-8 w-full text-center text-xl font-bold cursor-pointer transition-colors hover:bg-black hover:text-white mb-6;
+    @apply w-full margin-bottom-lg;
   }
 
   /* 标签切换 */
   .tab-container {
-    @apply flex border-b border-gray-300 mb-6;
+    @apply flex margin-bottom-lg;
   }
 
   .tab-item {
-    @apply px-6 py-3 text-base font-medium cursor-pointer border-b-2 border-transparent;
+    @apply cursor-pointer;
+    border: none !important;
+    height: 38px;
+    border-radius: 999px;
+    background: hsl(0, 0%, 0%, .05);
+    box-shadow: inset 0px 0px 10px 0px hsl(0, 0%, 0%, .02);
+    color: hsl(0, 0%, 0%, .6);
+    padding: 9px 16px !important;
+    margin-right: 10px;
   }
 
   .tab-selected {
-    @apply bg-black text-white border-b-black;
+    @apply bg-white text-black;
   }
 
   .tab-unselected {
-    @apply bg-white text-black hover:bg-gray-100;
+    /* nth */
   }
 
   /* 安装类型下拉 */
   .install-type-dropdown {
-    @apply border border-black bg-white p-4;
+    border: 1px solid hsl(0, 0%, calc(calc(100% - (1 * 16%)) + (1 * 6%))) !important;
+    padding: 16px;
+    border-radius: 10px;
+  }
+
+  .log-container {
+    @apply info-bar;
+    padding: 0;
+  }
+
+  .log-output {
+    background: linear-gradient(180deg, hsl(0, 0%, 0%, .02) 0%, hsl(0, 0%, 0%, 0) 100%);
+    padding: 0 13px !important
+  }
+
+  .overlay-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    backdrop-filter: blur(10px);
+    background: hsl(0, 0%, 0%, .4);
+    -webkit-transition: all .25s ease;
+    transition: all .25s ease;
+    /* overflow-y: scroll !important */
+  }
+  
+  .overlay {
+    position: relative;
+    margin: 40px auto 10px;
+    margin-top: 4vh;
+    width: 100%;
+    max-width: 800px;
+  }
+
+  .overlay-container::before {
+    content: '';
+    order: -1;
+    flex-shrink: 0;
+  }
+
+  .overlay-container::after {
+    content: '';
+    flex-shrink: 0;
+  }
+  
+  .overlay-title {
+    padding: 0 16px;
+    font-weight: 600;
+    font-size: 24px;
+
+    button {
+      padding: 0 !important;
+      height: unset;
+      border: none;
+      font-size: 30px;
+      margin: -10px 0;
+    }
+  }
+
+  button.icon-font {
+    padding: 0 !important;
+    height: unset;
+    border: none;
+    font-size: 20px;
+    margin: -10px 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .overlay-content {
+    background: #f2f2f2;
+    border-radius: 26px !important;
+    padding: 10px;
+    border: 1px solid hsl(0, 0%, 0%, .1);
+  }
+
+  .overlay-actions button {
+    /* width: 100%; */
+    background: rgb(255, 255, 255);
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 15px !important;
+    height: auto;
+    border: none;
+    color: unset;
+  }
+
+  button, .button, a.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    white-space: nowrap;
+    -webkit-transition: background-color .125s ease, border-color .125s ease, color .125s ease;
+    transition: background-color .125s ease, border-color .125s ease, color .125s ease;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 16px;
+    padding: 6px 12px !important;
+    text-align: center;
+    border-radius: 9999px;
+    background: #FFFFFF;
+    height: 38px;
+    border: 3px solid hsl(0, 0%, 95%);
+    box-shadow: inset 0px 0px 10px 0px hsl(0, 0%, 0%, .02);
+    background: hsl(var(--xf-buttonBg));
+  }
+
+  textarea, input, select {
+    background: hsl(0, 0%, 0%, .05) !important;
+    box-shadow: inset 0px 0px 2px 0px hsl(0, 0%, 0%, .1);
+    border-radius: 10px;
+    border: none !important;
+    padding: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    vertical-align: top;
+    line-height: 1.4;
+    text-align: left;
+    word-wrap: break-word;
+    transition: all .25s ease;
+    appearance: none;
+    font-size: 15px;
+  }
+
+  .-translate-x-full {
+    transform: translateX(100%) !important;
+  }
+
+  .icon-font {
+    font-family: 'MiSymbolVF';
+    color: black;
+    font-weight: normal;
+    font-size: 24px;
+  }
+
+  .nav-pair {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .nav-pc {
+    transform: scale(0.9);
+    gap: 20px;
+    transform-origin: center;
+    font-weight: 600;
+    font-size: 15px;
   }
 
   /* 响应式调整 */
   @media (max-width: 768px) {
+    .nav-pc {
+      display: none !important;
+    }
+
+    .sidebar {
+      display: flex;
+    }
+
     .sidebar {
       @apply w-full border-r-0 border-b border-gray-200;
+      display: flex;
+      justify-content: flex-end;
+
+      >div {
+        position: relative;
+        width: 280px;
+        max-width: 85%;
+        height: 100%;
+        overflow: auto;
+        padding: 60px 10px 10px;
+        background: #f2f2f2;
+      }
     }
     
     .main-content {
-      @apply p-4;
+      padding: 0;
     }
     
     .tab-item {
       @apply px-4 py-2;
+    }
+
+    .overlay {
+      max-width: calc(100% - 20px);
+
+      [style="padding-bottom: 6px;"] {
+        padding-bottom: 16px !important;
+        gap: 0;
+      }
+    }
+
+    .overlay-container::after {
+      display: none;
     }
   }
 }

@@ -2,7 +2,7 @@
 
 ## 概述
 
-BandBurg Script 是一个在 BandBurg Web 应用中运行的 JavaScript 沙箱环境，允许用户编写和执行自定义脚本来控制小米手环设备。脚本可以访问 WASM 接口、创建 GUI 界面、监听设备事件，并保存到本地存储中。
+BandBurg Script 是一个在 BandBurg Web 应用中运行的 JavaScript 沙箱环境，允许用户编写和执行自定义脚本来控制 Vela 设备设备。脚本可以访问 WASM 接口、创建 GUI 界面、监听设备事件，并保存到本地存储中。
 
 ## 快速开始
 
