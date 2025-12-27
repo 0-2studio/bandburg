@@ -1909,7 +1909,7 @@ function App() {
                 <div>
                   <h3 className="text-xl font-bold mb-3">项目介绍</h3>
                   <p className="leading-relaxed">
-                    BandBurg 是一个基于 WebAssembly (WASM) 的现代化 Web 界面，用于管理 Vela 设备系列设备。
+                    BandBurg 是一个基于 WebAssembly (WASM) 的现代化 Web 界面，用于管理 Vela 系列设备。
                     通过浏览器即可连接、配置和安装表盘/应用到您的手环设备，无需安装任何额外软件。
                     <a href="https://github.com/NEORUAA/bandburg" target="_blank" rel="noopener noreferrer">本项目</a> 由 <a href="https://github.com/AstralSightStudios/AstroBox-NG" target="_blank" rel="noopener noreferrer">AstroBox-NG</a> 提供技术支持。
                   </p>
