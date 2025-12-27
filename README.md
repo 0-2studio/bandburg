@@ -1,7 +1,7 @@
 # BandBurg - Vela 设备现代化管理界面
 https://bandburg.bandbbs.cn/
 
-基于 miband-web-install项目( https://github.com/0-2studio/miband-web-install ) 的米坛风格 Web 管理界面，用于连接和管理 Vela 设备系列设备。
+基于 miband-web-install项目( https://github.com/0-2studio/miband-web-install ) 的米坛风格 Web 管理界面，用于连接和管理 Vela 系列设备。
 
 本项目由 Astrobox-NG ( https://github.com/AstralSightStudios/AstroBox-NG ) 提供技术支持。
 
