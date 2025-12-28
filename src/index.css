@@ -267,6 +267,7 @@
       font-size: 30px;
       margin: -10px 0;
       background: transparent;
+      box-shadow: none;
     }
   }
 
@@ -434,5 +435,27 @@
 
   .flex-between {
     @apply flex items-center justify-between;
+  }
+}
+
+/* 深色模式覆盖样式-媒体查询自动 */
+@media (prefers-color-scheme: dark) {
+  html {
+    filter: brightness(0.9) invert(1) hue-rotate(180deg);
+    
+    .info-bar .text-4xl,
+    img[src="/icon.png"] {
+      filter: invert(1) hue-rotate(180deg) brightness(1.1);
+    }
+
+    div.fixed.inset-0.bg-black.bg-opacity-50.z-10,
+    .overlay-container {
+      background: hsl(0deg 0% 100% / 50%) !important;
+
+      .overlay-title .text-white {
+        color: black !important;
+      }
+    }
+    
   }
 }
