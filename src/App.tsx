@@ -2379,6 +2379,16 @@ function App() {
                                 
                                 // GUI创建功能
                                 gui: (config) => {
+                                  // 关闭同一 script 之前创建的 GUI（实现动态更新）
+                                  if (sandbox.activeGUI) {
+                                    try {
+                                      sandbox.activeGUI.close()
+                                    } catch (e) {
+                                      // 忽略关闭错误
+                                    }
+                                    sandbox.activeGUI = null
+                                  }
+                                  
                                   // 创建GUI容器
                                   const overlayContainer = document.createElement('div')
                                   overlayContainer.className = 'fixed inset-0 z-30 overlay-container'
@@ -2446,6 +2456,7 @@ function App() {
                                       case 'label':
                                         if (!element.text) break
                                         const label = document.createElement('div')
+                                        label.id = elementId
                                         label.textContent = element.text || 'empty'
                                         label.style.cssText = `
                                           padding: 8px;
@@ -2453,6 +2464,8 @@ function App() {
                                           border-radius: 10px;
                                         `
                                         elementContainer.appendChild(label)
+                                        elements[elementId] = label
+                                        values[elementId] = element.text
                                         break
                                         
                                       case 'input':
@@ -2642,8 +2655,8 @@ function App() {
                                   // 添加到页面
                                   document.body.appendChild(overlayContainer)
                                   
-                                  // 返回GUI控制器
-                                  return {
+                                  // 创建GUI控制器
+                                  const guiController = {
                                     // 获取所有值
                                     getValues: () => ({ ...values }),
                                     
@@ -2656,7 +2669,12 @@ function App() {
                                         if (elements[id].type === 'file') {
                                           // 文件输入不能直接设置值
                                           console.warn('Cannot set value for file input directly')
+                                        } else if (elements[id].tagName === 'DIV') {
+                                          // Label 元素（实际是 div）
+                                          elements[id].textContent = value
+                                          values[id] = value
                                         } else {
+                                          // 其他表单元素（input, textarea, select）
                                           elements[id].value = value
                                           values[id] = value
                                         }
@@ -2681,21 +2699,30 @@ function App() {
                                     
                                     // 关闭GUI
                                     close: () => {
-                                      if (container.parentNode) {
-                                        container.parentNode.removeChild(container)
+                                      if (overlayContainer.parentNode) {
+                                        overlayContainer.parentNode.removeChild(overlayContainer)
+                                      }
+                                      // 清理引用
+                                      if (sandbox.activeGUI === guiController) {
+                                        sandbox.activeGUI = null
                                       }
                                     },
                                     
                                     // 显示GUI（默认已显示）
                                     show: () => {
-                                      container.style.display = 'block'
+                                      overlayContainer.style.display = 'block'
                                     },
                                     
                                     // 隐藏GUI
                                     hide: () => {
-                                      container.style.display = 'none'
+                                      overlayContainer.style.display = 'none'
                                     }
                                   }
+                                  
+                                  // 存储到 sandbox，供下次调用时关闭（实现动态更新）
+                                  sandbox.activeGUI = guiController
+                                  
+                                  return guiController
                                 }
                               }
                               
