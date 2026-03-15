@@ -325,7 +325,7 @@ function App() {
   
   // 保存设备
   const saveDevice = () => {
-    if (!deviceForm.name || !deviceForm.addr || !deviceForm.authkey) {
+    if (!deviceForm.name || !deviceForm.authkey) {
       addLog('请填写所有必填字段', 'error')
       return
     }
@@ -3556,9 +3556,9 @@ sandbox.log('✅ GUI界面已创建，请与界面交互')`
                       />
                     </div>
                     <div className="margin-bottom-lg">
-                      <label className="block text-sm font-bold mb-2">设备地址 *</label>
-                      <input 
-                        type="text" 
+                      <label className="block text-sm font-bold mb-2">设备地址（可选）</label>
+                      <input
+                        type="text"
                         value={deviceForm.addr}
                         onChange={(e) => setDeviceForm({...deviceForm, addr: e.target.value})}
                         placeholder="例如：XX:XX:XX:XX:XX:XX"
